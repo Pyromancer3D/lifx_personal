@@ -98,6 +98,7 @@ input[type=text],input[type=number],input[type=time],select{font:inherit;backgro
 .menu{position:absolute;right:0;top:calc(100% + 6px);z-index:10;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px -8px #0006;overflow:hidden}
 .pre .menu button{display:block;width:100%;border:0;border-radius:0;text-align:left;white-space:nowrap;padding:10px 16px}
 .pre .menu button:hover{background:var(--bg)}.pan>button{justify-self:start}
+:root.noip .ip{display:none}
 .ip{margin:2px 0 0;text-align:right;white-space:nowrap;font-size:.8rem;color:var(--ipc);font-variant-numeric:tabular-nums}
 dialog{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;width:min(620px,94vw);padding:22px}
 dialog::backdrop{background:#0008}
@@ -106,7 +107,7 @@ legend{padding:0 6px;font-weight:600}
 .mem{display:flex;flex-wrap:wrap;gap:4px 14px}.mem label{display:flex;gap:6px;align-items:center;font-size:.9rem}
 small{color:var(--mut)}
 </style>
-<script>try{var m=localStorage.getItem("themeMode");document.documentElement.dataset.theme=m==="light"||m==="dark"?m:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch(e){}</script>
+<script>try{if(localStorage.getItem("showIps")==="0")document.documentElement.classList.add("noip")}catch(e){}try{var m=localStorage.getItem("themeMode");document.documentElement.dataset.theme=m==="light"||m==="dark"?m:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch(e){}</script>
 </head>
 <body>
 <div id="alert" role="alert" hidden><div><strong id="alertT"></strong><span id="alertM"></span></div><button id="alertX" aria-label="Dismiss">&times;</button></div>
@@ -135,6 +136,8 @@ small{color:var(--mut)}
     <label>Latitude<input type="number" id="lat" step="any" placeholder="e.g. 40.71"></label>
     <label>Longitude<input type="number" id="lon" step="any" placeholder="e.g. -74.01"></label>
     <small>Schedules use this server's clock and timezone. Sun times are calculated locally; no internet needed.</small></fieldset>
+  <fieldset><legend>Display</legend>
+    <label class="hidt"><span class="sw sm"><input type="checkbox" id="showIps" checked><i></i></span>Show light IP addresses on cards <small>(this device only)</small></label></fieldset>
   <fieldset><legend>Behavior</legend>
     <label>Fade time when changing (seconds)<input type="number" id="tr" min="0" step="0.1"></label></fieldset>
   <small id="msg" role="status"></small>
@@ -448,6 +451,9 @@ function applyTheme(){const m=themeMode(),eff=m==='auto'?(mq.matches?'dark':'lig
 $('#theme').onclick=()=>{try{localStorage.setItem('themeMode',document.documentElement.dataset.theme==='dark'?'light':'dark')}catch{}applyTheme()};
 $('#themeAuto').onclick=()=>{try{localStorage.removeItem('themeMode')}catch{}applyTheme()};
 mq.addEventListener('change',applyTheme);applyTheme();
+// Show/hide IP addresses: a per-device display preference (kept in this browser, like the theme)
+$('#showIps').checked=!document.documentElement.classList.contains('noip');
+$('#showIps').onchange=e=>{document.documentElement.classList.toggle('noip',!e.target.checked);try{localStorage.setItem('showIps',e.target.checked?'1':'0')}catch{}};
 
 // Settings
 const dlg=$('#dlg'),saveGroups=()=>{lastGroupSave=Date.now();return api('groups','PUT',{groups:S.groups})};
