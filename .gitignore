@@ -1,0 +1,10 @@
+# Your own settings: home location, light IPs, groups, presets, schedules. Keep out of the repo.
+config.json
+data.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Release bundles
+*.zip

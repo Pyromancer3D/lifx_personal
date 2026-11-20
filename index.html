@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Naru/Pyro Lights</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cpath d=%22M16 2.5a9.5 9.5 0 0 0-5.2 17.4V23h10.4v-3.1A9.5 9.5 0 0 0 16 2.5z%22 fill=%22%23ffd23f%22 stroke=%22%23d99a00%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M12.5 8.5a5 5 0 0 1 3-2%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 opacity=%22.8%22/%3E%3Crect x=%2210.8%22 y=%2223.5%22 width=%2210.4%22 height=%223%22 rx=%221.2%22 fill=%22%237d8996%22/%3E%3Crect x=%2212.4%22 y=%2227%22 width=%227.2%22 height=%222.6%22 rx=%221.3%22 fill=%22%237d8996%22/%3E%3C/svg%3E">
+<style>
+:root{--bg:#e3e8ee;--ink:#17222d;--mut:#5d6b78;--card:#fff;--line:#cfd7df;--acc:#2b5d8a;--ipc:#8f9aa6;color-scheme:light}
+:root[data-theme=dark]{--bg:#141b22;--ink:#e6ecf2;--mut:#93a1ae;--card:#1e2830;--line:#2f3b46;--acc:#7fb3e0;--ipc:#8996a3;color-scheme:dark}
+*{box-sizing:border-box}
+#alert{position:fixed;top:0;left:0;right:0;z-index:100;background:#b42318;color:#fff;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between;font-size:.9rem;line-height:1.35;box-shadow:0 2px 12px #0007}
+#alert[hidden]{display:none}#alert strong{display:block;font-size:1rem;margin-bottom:2px}
+#alert button{flex:none;background:none;border:0;border-radius:6px;color:#fff;font-size:1.5rem;line-height:1;padding:0 6px;cursor:pointer}
+#alert button:hover{background:#ffffff26;border:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 ui-rounded,"Avenir Next",system-ui,sans-serif;padding:24px;max-width:1100px;margin-inline:auto}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between;margin-bottom:20px}
+h1{font-size:2.4rem;margin:0;letter-spacing:-.03em;line-height:1}
+h2{font-size:1.05rem;margin:28px 0 10px}
+h3{margin:0;font-size:1.05rem}
+#themeAuto{padding:5px 12px;font-size:.85rem}#themeAuto.act{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.tbtn{width:38px;height:38px;padding:0;flex:none;font-size:1.25rem;line-height:1;display:grid;place-items:center}
+.sub{color:var(--mut);margin:4px 0 0}
+button{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 16px;cursor:pointer}
+button:hover{border-color:var(--acc)}button.p{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.card{background:var(--card);border-radius:14px;padding:16px;border:1px solid var(--line);border-top:5px solid var(--c,var(--line));box-shadow:0 -8px 28px -14px var(--c,transparent);display:grid;gap:10px}
+.card:not(.on){--c:var(--line);box-shadow:none}.card.dead{opacity:.5}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;align-items:center}
+.st{margin:2px 0 0;color:var(--mut);font-size:.85rem;font-variant-numeric:tabular-nums}
+.sw{position:relative;width:48px;height:28px;flex:none}.sw input{opacity:0;position:absolute;inset:0;margin:0;cursor:pointer;z-index:1}
+.sw i{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:.15s}
+.sw i:after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.15s}
+.sw input:checked+i{background:var(--acc)}.sw input:checked+i:after{left:23px}
+.sw input:focus-visible+i{outline:2px solid var(--acc);outline-offset:2px}
+.seg{display:flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.seg button{flex:1;border:0;border-radius:0;background:none;padding:5px}.seg .act{background:var(--acc);color:var(--bg)}
+label.l{display:flex;justify-content:space-between;font-size:.85rem;color:var(--mut)}
+input[type=range]{width:100%;accent-color:var(--acc)}
+input.k{appearance:none;height:10px;border-radius:9px;background:linear-gradient(90deg,#ff9d3a,#fff4e5 45%,#cfe0ff,#8fb4ff)}
+input.k::-webkit-slider-thumb{appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #555}
+input.k::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #555}
+input[type=color]{width:100%;height:42px;border:1px solid var(--line);border-radius:8px;background:none;padding:2px;cursor:pointer}
+input[type=text],input[type=number],input[type=time],select{font:inherit;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 10px;width:100%}
+.g{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.g>div:first-child,.top>h3{min-width:0}
+.empty{color:var(--mut)}
+.hbtns{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+@media(max-width:700px){header{flex-wrap:nowrap;align-items:flex-start}header>div:first-child{flex:1;min-width:0}.hbtns{flex:none;flex-direction:column;align-items:flex-end}}
+.hrow{display:flex;align-items:center;gap:12px}.hrow .push{margin-left:auto}.hrow button{font-size:.9rem;padding:4px 12px}
+.hrow .hbtn{font:inherit;font-weight:700;padding:2px 4px;margin-left:-4px;border:0;background:none;border-radius:6px;cursor:pointer}
+.grid[hidden]{display:none}
+#groups,#lights,#schedules{align-items:start}
+.pbtn{justify-self:start}
+.brow{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}.brow>:first-child{justify-self:start}.brow>:last-child{justify-self:end}
+.lnk{background:none;border:0;padding:0;font-size:.8rem;color:var(--mut);border-radius:4px;cursor:pointer}
+.lnk:hover{color:var(--ink);border-color:transparent}
+.lfun{display:grid;gap:6px;justify-items:start}
+.lfx{display:flex;flex-wrap:wrap;gap:6px 14px}
+.lfl{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--mut)}
+.sw.sm{width:34px;height:20px}.sw.sm i:after{width:14px;height:14px}.sw.sm input:checked+i:after{left:17px}
+.fxg{grid-template-columns:1fr 1fr;gap:2px 24px}.fxg>small{grid-column:1/-1;margin-top:6px}
+.fxr{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.pan{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:12px}
+.pre{display:grid;gap:8px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;color:var(--mut)}
+.chip{display:inline-flex;align-items:center;gap:6px}.chip i{width:12px;height:12px;border-radius:50%;border:1px solid var(--line);flex:none}
+.prow{display:flex;gap:8px;align-items:center}
+.pnb{flex:1;min-width:0;display:flex;justify-content:space-between;gap:8px;text-align:left;font-weight:600}
+.pnb span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdet{display:grid;gap:10px}.chips.col{flex-direction:column;flex-wrap:nowrap}
+#cfm{width:min(380px,92vw)}#cfm p{margin:0 0 18px;font-size:1.05rem}
+.big{width:100%;font-size:1.3rem;font-weight:700;padding:16px}
+.eq[open]{display:grid;grid-template-columns:1fr 1fr;gap:10px}.eq #cfmText{grid-column:1/-1}
+.eq #cfmYes{margin:0;font-size:1.3rem;font-weight:700;padding:16px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px}
+.eq #cfmYes:hover{border-color:var(--acc)}
+.tiny{display:block;margin:26px 0 0 auto;font-size:.7rem;padding:2px 8px;color:var(--mut);background:none;border-color:transparent}
+.pre button,.pan>button{padding:5px 14px}
+.pre .pnb{padding:9px 16px}.pre .hb{padding:7px 11px;font-size:1.05rem;line-height:1}
+.card h3 .cx{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;text-align:left;cursor:pointer;border-radius:4px;max-width:100%;display:block;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+.card h3 .cx:hover{text-decoration:underline}
+.hidt{display:flex;align-items:center;gap:8px;font-size:.9rem;margin:6px 0 4px}
+.srow{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.cnt{display:grid;gap:1px;font-size:.72rem;color:var(--mut);white-space:nowrap;line-height:1.25}.cnt b{font-size:.95rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.mini{display:flex;flex-direction:row;align-items:center;gap:12px;padding:12px 16px}
+.mini h3{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cgrip{flex:none;width:28px;height:34px;display:flex;align-items:center;justify-content:center;cursor:grab;touch-action:none;border-radius:6px}
+.cgrip:before{content:"";width:3px;height:20px;border-left:3px solid var(--mut);border-right:3px solid var(--mut)}
+.cgrip:hover:before,.cgrip:focus-visible:before{border-color:var(--acc)}
+.card.cdrag{box-shadow:0 0 0 2px var(--acc);background:var(--bg)}
+.grip{flex:none;align-self:stretch;width:14px;margin-right:-3px;display:flex;align-items:center;justify-content:center;cursor:grab;touch-action:none;border-radius:4px}
+.grip:before{content:"";width:2px;height:18px;border-left:2px solid var(--mut);border-right:2px solid var(--mut)}
+.grip:hover:before,.grip:focus-visible:before{border-color:var(--acc)}
+.pre.drag{background:var(--bg);box-shadow:0 0 0 2px var(--acc);border-radius:10px}
+.mwrap{position:relative;flex:none}
+.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:10;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px -8px #0006;overflow:hidden}
+.pre .menu button{display:block;width:100%;border:0;border-radius:0;text-align:left;white-space:nowrap;padding:10px 16px}
+.pre .menu button:hover{background:var(--bg)}.pan>button{justify-self:start}
+.ip{margin:2px 0 0;text-align:right;white-space:nowrap;font-size:.8rem;color:var(--ipc);font-variant-numeric:tabular-nums}
+dialog{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;width:min(620px,94vw);padding:22px}
+dialog::backdrop{background:#0008}
+fieldset{border:1px solid var(--line);border-radius:12px;margin:0 0 14px;padding:12px;display:grid;gap:8px}
+legend{padding:0 6px;font-weight:600}
+.mem{display:flex;flex-wrap:wrap;gap:4px 14px}.mem label{display:flex;gap:6px;align-items:center;font-size:.9rem}
+small{color:var(--mut)}
+</style>
+<script>try{var m=localStorage.getItem("themeMode");document.documentElement.dataset.theme=m==="light"||m==="dark"?m:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch(e){}</script>
+</head>
+<body>
+<div id="alert" role="alert" hidden><div><strong id="alertT"></strong><span id="alertM"></span></div><button id="alertX" aria-label="Dismiss">&times;</button></div>
+<header>
+  <div><h1>Lights</h1><p class="sub" id="count">Looking for lights…</p></div>
+  <div class="hbtns"><div class="row"><button class="p" id="allOn">All on</button><button id="allOff">All off</button></div><button id="openSet">Settings</button></div>
+</header>
+<h2 class="hrow"><button id="schedToggle" class="hbtn" aria-expanded="false" aria-controls="schedules">Schedules</button><button id="schedEdit">Edit</button><button id="newSched" class="push">+ New schedule</button></h2>
+<div class="grid" id="schedules" hidden></div>
+<h2 class="hrow"><button id="grpToggle" class="hbtn" aria-expanded="true" aria-controls="groups">Groups</button><button id="grpEdit">Edit</button></h2><div class="grid" id="groups"></div>
+<h2 class="hrow"><button id="litToggle" class="hbtn" aria-expanded="true" aria-controls="lights">Lights</button><button id="litEdit">Edit</button></h2><div class="grid" id="lights"></div>
+
+<dialog id="dlg">
+  <div class="row" style="justify-content:space-between;margin-bottom:14px"><h3 style="font-size:1.3rem;margin:0">Settings</h3><div class="row"><button id="themeAuto" aria-pressed="true" title="Follow this device's light/dark setting">Auto</button><button id="theme" class="tbtn"></button></div></div>
+  <fieldset><legend>Groups</legend><div id="gedit"></div>
+    <div class="row"><input type="text" id="newG" placeholder="New group name" style="flex:1"><button id="addG">Add group</button></div></fieldset>
+  <fieldset><legend>Network</legend>
+    <label>Broadcast address<input type="text" id="bc"></label>
+    <small>Use your subnet's broadcast (e.g. 192.168.1.255) if lights aren't found.</small>
+    <label>Extra light IPs, comma-separated<input type="text" id="ips" placeholder="192.168.1.50, 192.168.1.51"></label>
+    <label>Scan ranges, comma-separated (optional)<input type="text" id="scan" placeholder="10.69.1.0/24"></label>
+    <small>Probes every address in these ranges directly, which works even when broadcasts are blocked. Leave blank to scan this server's own /24.</small>
+    <small id="diag"></small>
+    <label>Refresh every (seconds)<input type="number" id="poll" min="1" step="1"></label></fieldset>
+  <fieldset><legend>Location (for sunrise/sunset schedules)</legend>
+    <label>Latitude<input type="number" id="lat" step="any" placeholder="e.g. 40.71"></label>
+    <label>Longitude<input type="number" id="lon" step="any" placeholder="e.g. -74.01"></label>
+    <small>Schedules use this server's clock and timezone. Sun times are calculated locally; no internet needed.</small></fieldset>
+  <fieldset><legend>Behavior</legend>
+    <label>Fade time when changing (seconds)<input type="number" id="tr" min="0" step="0.1"></label></fieldset>
+  <small id="msg" role="status"></small>
+  <small id="ver" style="display:block;margin-bottom:10px"></small>
+  <div class="row" style="justify-content:flex-end"><button id="close">Close</button><button class="p" id="saveSet">Save settings</button></div>
+</dialog>
+
+<dialog id="sdlg">
+  <h3 style="font-size:1.3rem;margin-bottom:14px">Schedule</h3>
+  <fieldset><legend>Name</legend><input type="text" id="sName" placeholder="e.g. Sunset indigo"></fieldset>
+  <fieldset><legend>When</legend>
+    <select id="sType" aria-label="When"><option value="time">At a specific time</option><option value="sunrise">At sunrise</option><option value="sunset">At sunset</option></select>
+    <label id="sTimeL">Time<input type="time" id="sTime"></label>
+    <label id="sOffL">Minutes after (negative = before)<input type="number" id="sOff" step="5"></label>
+    <small id="sLoc"></small>
+    <div class="mem" id="sDays"></div></fieldset>
+  <fieldset><legend>Do this</legend>
+    <select id="sAct" aria-label="Action"><option value="off">Turn off</option><option value="on">Turn on</option><option value="preset">Apply a preset</option><option value="breathe">Breathe</option><option value="pulse">Pulse (flash)</option><option value="flicker">Candle flicker</option><option value="strobe">Strobe</option></select>
+    <label>Lights<select id="sTgt"></select></label>
+    <label id="sPreL">Preset<select id="sPre"></select></label>
+    <label id="sTimesL">Times<input type="number" id="sTimes" min="1" max="1000" value="3"></label>
+    <label id="sSecsL"><span id="sSecsT">Seconds (max 60)</span><input type="number" id="sSecs" min="1" max="60" value="5"></label>
+    <label id="sColL">Color<input type="color" id="sCol" value="#ff0000"></label>
+    <label id="sBriL">Brightness (%)<input type="number" id="sBri" min="1" max="100" value="100"></label>
+    <small id="sFxNote">Lights do this in the color above, then go back to what they were doing. Lights that are off are skipped.</small></fieldset>
+  <small id="sMsg" role="status"></small>
+  <div class="row" style="justify-content:space-between"><div class="row"><button id="sDel">Delete</button><button id="sRun">Run now</button></div>
+    <div class="row"><button id="sCancel">Cancel</button><button class="p" id="sSave">Save</button></div></div>
+</dialog>
+
+<dialog id="cfm" aria-labelledby="cfmText">
+  <p id="cfmText"></p>
+  <button id="cfmNo" class="p big" autofocus>No</button>
+  <button id="cfmYes" class="tiny">Yes, delete</button>
+</dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+let S={lights:[],groups:[],schedules:[],settings:{}},down=false,lastEdit=0,lastGroupSave=0,openP=new Set(),flash={},openD=new Set(),menuP=null,openF=new Set(),openLF=new Set(),openS=new Set(),GS={};
+const mob=matchMedia('(max-width:700px), (pointer:coarse)'),cstate=new Map(),isOpen=id=>cstate.has(id)?cstate.get(id):!mob.matches; // cards start collapsed on phones/touch devices
+const sec={groups:{open:true,edit:false},lights:{open:true,edit:false},schedules:{open:false,edit:false}};
+const api=(p,m='POST',b)=>fetch('/api/'+p,{method:m,headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined,signal:m==='GET'&&AbortSignal.timeout?AbortSignal.timeout(6000):undefined}).then(async r=>{try{return await r.json()}catch{return{ok:false,error:`The server replied with HTTP ${r.status}, not JSON. Is this page being served by hl_lifx_control.py?`}}})
+  .catch(e=>({ok:false,error:location.protocol==='file:'?'This page was opened as a file. Open it from the server instead, e.g. http://localhost:8080':`Can\u2019t reach ${location.host}. Make sure this device is on your home network and the lights service (hl_lifx_control.py) is running. (${e.message})`}));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hsb2rgb=(h,s,v)=>{s/=100;v/=100;const f=n=>{const k=(n+h/60)%6;return v-v*s*Math.max(0,Math.min(k,4-k,1))};return[f(5),f(3),f(1)].map(x=>Math.round(x*255))};
+const rgb2hs=(r,g,b)=>{r/=255;g/=255;b/=255;const m=Math.max(r,g,b),d=m-Math.min(r,g,b);let h=0;if(d){h=m===r?((g-b)/d)%6:m===g?(b-r)/d+2:(r-g)/d+4;h=(h*60+360)%360}return[Math.round(h),m?Math.round(d/m*100):0]};
+const hex=a=>'#'+a.map(x=>x.toString(16).padStart(2,'0')).join('');
+const kRgb=k=>{const t=k/100,c=x=>Math.round(Math.max(0,Math.min(255,x)));return[c(t<=66?255:329.7*(t-60)**-.1332),c(t<=66?99.47*Math.log(t)-161.2:288.1*(t-60)**-.0755),c(t>=66?255:t<=19?0:138.5*Math.log(t-10)-305)]};
+const rgbOf=l=>l.s>0?hsb2rgb(l.h,l.s,100):kRgb(l.k);
+
+const pend={};
+function send(mac,body){pend[mac]={...pend[mac],...body};if(pend[mac].t)return;pend[mac].t=setTimeout(()=>{const b=pend[mac];delete pend[mac];delete b.t;api('light/'+mac,'POST',b)},90)}
+
+function status(l){if(!l.online)return'Not responding';if(!l.on)return'Off';const r=rgbOf(l);
+  return(l.s>0?`${hex(r)} · rgb(${r.join(', ')})`:`${l.k} K white`)+` · ${l.b}%`}
+function card(l){const col=l.s>0,r=rgbOf(l),op=isOpen('l:'+l.mac);
+  return`<article class="card ${l.on?'on':''} ${l.online?'':'dead'}" data-mac="${l.mac}" style="--c:${hex(r)}">
+  <div class="top"><h3><button class="cx" data-a="cx" aria-expanded="${op}">${op?'\u25be':'\u25b8'} ${esc(l.label)}</button></h3>
+  <label class="sw" title="Power"><input type="checkbox" data-a="power" ${l.on?'checked':''} aria-label="Power for ${esc(l.label)}"><i></i></label>
+  <p class="st">${status(l)}</p><p class="ip">${esc(l.ip||'')}</p></div>
+  ${op?`<div class="seg"><button data-a="mode" data-v="color" class="${col?'act':''}">Color</button><button data-a="mode" data-v="white" class="${col?'':'act'}">White</button></div>
+  ${col?`<input type="color" data-a="color" value="${hex(hsb2rgb(l.h,l.s,100))}" aria-label="Color">`
+       :`<label class="l">Warmth<output>${l.k} K</output></label><input type="range" class="k" data-a="k" min="1500" max="9000" step="50" value="${l.k}" aria-label="Kelvin">`}
+  <label class="l">Brightness<output>${l.b}%</output></label><input type="range" data-a="b" min="0" max="100" value="${l.b}" aria-label="Brightness">
+  <div class="lfun"><button class="lnk" data-a="lfun" aria-expanded="${openLF.has(l.mac)}">Fun ${openLF.has(l.mac)?'\u25be':'\u25b8'}</button>${openLF.has(l.mac)?`<span class="lfx">${FX.map(([k,n])=>`<label class="lfl">${n}<span class="sw sm"><input type="checkbox" data-a="fx" data-fx="${k}" ${l.fx===k?'checked':''} aria-label="${n} for ${esc(l.label)}"><i></i></span></label>`).join('')}</span>`:''}</div>`:''}
+  </article>`}
+
+const snap=g=>{const o={};S.lights.filter(l=>g.members.includes(l.mac)).forEach(l=>o[l.mac]={label:l.label,on:l.on,h:l.h,s:l.s,b:l.b,k:l.k});return o};
+const swatch=c=>hex(c.s>0?hsb2rgb(c.h,c.s,100):kRgb(c.k));
+const chip=c=>`<span class="chip"><i style="background:${swatch(c)}"></i>${esc(c.label)}: ${c.on?(c.s>0?`Color ${swatch(c)}`:`White ${c.k} K`)+` · ${c.b}%`:'Off'}</span>`;
+function presetPanel(g){const ps=g.presets||[];
+  return`<div class="pan">${ps.map(p=>{const o=openD.has(p.id);return`<div class="pre" data-pid="${p.id}">
+    <div class="prow"><span class="grip" role="button" tabindex="0" title="Drag to reorder" aria-label="Reorder ${esc(p.name)} (up and down arrow keys)"></span><button data-g="papply" class="p pnb" title="Apply preset"><span>${esc(p.name)}</span><span aria-hidden="true">${Date.now()<(flash[p.id]||0)?'Saved \u2713':'\u25b8'}</span></button>
+      <div class="mwrap"><button data-g="pmenu" class="hb" aria-haspopup="menu" aria-expanded="${menuP===p.id}" aria-label="Options for ${esc(p.name)}">\u{1F354}</button>
+      ${menuP===p.id?`<div class="menu" role="menu"><button role="menuitem" data-g="ptoggle">Edit Preset</button><button role="menuitem" data-g="pdup">Duplicate Preset</button><button role="menuitem" data-g="pdel">Delete Preset</button></div>`:''}</div></div>
+    ${o?`<div class="pdet"><div class="chips col">${Object.values(p.lights).map(chip).join('')}</div>
+      <label class="l">Rename<input type="text" data-g="pname" value="${esc(p.name)}"></label>
+      <div class="row"><button data-g="psave" title="Overwrite with the lights' current settings">${Date.now()<(flash[p.id]||0)?'Saved \u2713':'Save current settings'}</button></div></div>`:''}</div>`}).join('')||'<p class="empty">No presets yet. Set the lights how you like, then add one.</p>'}
+    <button data-g="padd" aria-label="New preset from current settings">+ New preset</button></div>`}
+// A group's color is the average of its lights that are on (same colors the light cards show)
+function groupColor(g){const on=S.lights.filter(l=>g.members.includes(l.mac)&&l.on&&l.online);
+  return on.length?hex([0,1,2].map(i=>Math.round(on.reduce((s,l)=>s+rgbOf(l)[i],0)/on.length))):null}
+function paintGroups(){document.querySelectorAll('#groups>.card[data-gid]').forEach(c=>{const g=S.groups.find(x=>x.id===c.dataset.gid);if(!g)return;
+  const col=groupColor(g);c.style.setProperty('--c',col||'var(--line)');c.classList.toggle('on',!!col)})}
+// Set All: one color / white setting applied to every light in the group at once
+function gset(g){if(!GS[g.id]){const f=S.lights.find(l=>g.members.includes(l.mac)&&l.online)||S.lights.find(l=>g.members.includes(l.mac));
+  GS[g.id]=f&&f.s>0?{mode:'color',hex:hex(hsb2rgb(f.h,f.s,100)),k:3500}:{mode:'white',hex:'#ff0000',k:f?f.k:3500}}return GS[g.id]}
+function setAllPanel(g){const c=gset(g),col=c.mode==='color';
+  return`<div class="pan"><div class="seg"><button data-g="smode" data-v="color" class="${col?'act':''}">Color</button><button data-g="smode" data-v="white" class="${col?'':'act'}">White</button></div>
+  ${col?`<input type="color" data-g="scolor" value="${c.hex}" aria-label="Color for all lights in ${esc(g.name)}">`
+       :`<label class="l">Warmth<output>${c.k} K</output></label><input type="range" class="k" data-g="sk" min="1500" max="9000" step="50" value="${c.k}" aria-label="Kelvin for all lights in ${esc(g.name)}">`}</div>`}
+let sat;function setGroup(g,ch,now){S.lights.forEach(l=>{if(g.members.includes(l.mac))Object.assign(l,ch)});paintGroups();
+  clearTimeout(sat);const go=()=>api('group/'+g.id,'POST',ch);now?go():sat=setTimeout(go,90)}
+const FX=[['breathe','Breathing'],['pulse','Pulsing'],['flicker','Candle'],['strobe','Strobe']];
+const fxOf=g=>(S.lights.find(l=>g.members.includes(l.mac)&&l.fx)||{}).fx||null;
+function funPanel(g){const act=fxOf(g);
+  return`<div class="pan fxg">${FX.map(([k,n])=>`<label class="fxr"><span>${n}</span><span class="sw"><input type="checkbox" data-g="fx" data-fx="${k}" ${act===k?'checked':''} aria-label="${n}"><i></i></span></label>`).join('')}
+    <small>Only lights that are on are affected, using each light's current color. Switch it off to restore the lights.</small></div>`}
+function setFx(g,k){S.lights.forEach(l=>{if(g.members.includes(l.mac))l.fx=k&&l.on&&l.online?k:null});render(true)}
+function startFx(g,k){api('effect/'+g.id,'POST',{effect:k});setFx(g,k)}
+const mini=(attr,id,name,sub,col)=>`<article class="card mini ${col.startsWith('#')?'on':''}" ${attr}="${id}" style="--c:${col}"><span class="cgrip" role="button" tabindex="0" title="Drag to reorder" aria-label="Reorder ${esc(name)} (arrow keys)"></span><div style="min-width:0"><h3>${esc(name)}</h3><p class="st" style="margin:2px 0 0">${esc(sub)}</p></div></article>`;
+function render(force){
+  const a=document.activeElement;
+  if(!force&&(down||Date.now()-lastEdit<1500||(a&&a.closest&&a.closest('#lights')&&a.type==='color')||(a&&a.closest&&a.closest('#groups')&&(a.type==='text'||a.type==='color'))))return;
+  const ord=S.settings.light_order||[],idx=m=>{const i=ord.indexOf(m);return i<0?1e9:i};
+  const L=S.lights.sort((x,y)=>idx(x.mac)-idx(y.mac)||x.label.localeCompare(y.label));
+  $('#count').textContent=L.length?`${L.filter(l=>l.on&&l.online).length} of ${L.length} on`:'Looking for lights…';
+  $('#schedules').innerHTML=S.schedules.map(s=>sec.schedules.edit?mini('data-sid',s.id,s.name,whenTxt(s),'var(--line)'):sCard(s)).join('')||'<p class="empty">No schedules yet.</p>';
+  $('#lights').innerHTML=L.map(l=>sec.lights.edit?mini('data-mac',l.mac,l.label,status(l),l.on&&l.online?hex(rgbOf(l)):'var(--line)'):card(l)).join('')||'<p class="empty">No lights found yet.</p>';
+  $('#groups').innerHTML=S.groups.filter(g=>!g.hidden).map(g=>{const ms=L.filter(l=>g.members.includes(l.mac)),gc=groupColor(g),gop=isOpen('g:'+g.id);
+    if(sec.groups.edit)return mini('data-gid',g.id,g.name,`${ms.length} light${ms.length==1?'':'s'}`,gc||'var(--line)');
+    return`<div class="card ${gc?'on':''}" data-gid="${g.id}" style="--c:${gc||'var(--line)'}"><div class="g"><div><h3><button class="cx" data-g="gx" aria-expanded="${gop}">${gop?'\u25be':'\u25b8'} ${esc(g.name)}</button></h3><p class="st">${ms.length} light${ms.length==1?'':'s'}</p></div>
+    <div class="row"><button data-g="on">On</button><button data-g="off">Off</button></div></div>${gop?`
+    <label class="l">Brightness</label><input type="range" min="0" max="100" value="${ms.length?Math.round(ms.reduce((s,l)=>s+l.b,0)/ms.length):0}" data-g="b">
+    <div class="brow"><button data-g="pbtn" class="pbtn" aria-expanded="${openP.has(g.id)}">${openP.has(g.id)?'Hide':'Presets'}</button><button data-g="sbtn" class="pbtn" aria-expanded="${openS.has(g.id)}">${openS.has(g.id)?'Hide':'Set All'}</button><button data-g="fbtn" class="pbtn" aria-expanded="${openF.has(g.id)}">${openF.has(g.id)?'Hide':'Fun'}</button></div>${openP.has(g.id)?presetPanel(g):''}${openF.has(g.id)?funPanel(g):''}${openS.has(g.id)?setAllPanel(g):''}`:''}</div>`}).join('')
+    ||(S.groups.length?'<p class="empty">All groups are hidden. Change this in Settings.</p>':'<p class="empty">No groups yet. Create one in Settings.</p>');
+}
+let fails=0,alertKey='',dismissed='',emptySince=null;
+function showAlert(key,title,msg){const a=$('#alert');
+  if(!key){alertKey=dismissed='';a.hidden=true;document.body.style.paddingTop='';return}
+  alertKey=key;if(dismissed===key){a.hidden=true;document.body.style.paddingTop='';return}
+  $('#alertT').textContent=title;$('#alertM').textContent=msg;a.hidden=false;document.body.style.paddingTop=(a.offsetHeight+12)+'px'}
+$('#alertX').onclick=()=>{dismissed=alertKey;$('#alert').hidden=true;document.body.style.paddingTop=''};
+addEventListener('resize',()=>{if(!$('#alert').hidden)document.body.style.paddingTop=($('#alert').offsetHeight+12)+'px'});
+function health(){if(S.lights.length){emptySince=null;if(alertKey==='empty')showAlert(null)}
+  else{emptySince=emptySince||Date.now();if(Date.now()-emptySince>20000)showAlert('empty','No lights found yet','Check Settings › Network: the broadcast address, a scan range, or add a light’s IP. Make sure this server is on the same network as the lights.')}}
+async function refresh(){const s=await api('state','GET');
+  if(s.lights){fails=0;if(alertKey==='conn')showAlert(null);const keep=Date.now()-lastGroupSave<2500,g=keep?S.groups:s.groups,sc=keep?S.schedules:s.schedules,lo=S.settings.light_order;S=s;S.groups=g;S.schedules=sc;if(keep&&lo)S.settings.light_order=lo;render();health()}
+  else if(++fails>=2){showAlert('conn','Not connected to the lights server',s.error||'Can’t reach the server.');if(!S.lights.length)$('#count').textContent='Not connected'}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});addEventListener('online',refresh);
+setInterval(refresh,2000);refresh();
+
+const lights=$('#lights');
+lights.addEventListener('pointerdown',()=>down=true);addEventListener('pointerup',()=>setTimeout(()=>down=false,50));
+lights.addEventListener('input',e=>{const t=e.target,mac=t.closest('.card').dataset.mac,l=S.lights.find(x=>x.mac===mac),a=t.dataset.a;lastEdit=Date.now();
+  if(a==='b'){l.b=+t.value;t.previousElementSibling.lastElementChild.textContent=l.b+'%';send(mac,{b:l.b})}
+  if(a==='k'){l.k=+t.value;l.s=0;t.previousElementSibling.lastElementChild.textContent=l.k+' K';send(mac,{k:l.k,s:0})}
+  if(a==='color'){const[h,s]=rgb2hs(...[1,3,5].map(i=>parseInt(t.value.substr(i,2),16)));Object.assign(l,{h,s:s||1});send(mac,{h,s:l.s})}
+  if(a==='fx'){const k=t.dataset.fx,go=k=>{api('effect/'+mac,'POST',{effect:k});l.fx=l.on&&l.online?k:null;render(true)};
+    if(!t.checked){api('effect/'+mac,'POST',{effect:'stop'});l.fx=null;render(true)}
+    else if(k==='strobe'){t.checked=false;askConfirm(STROBE_WARN+' It stops by itself after 30 seconds.','Yes, start strobe',()=>go('strobe'))}
+    else go(k)}
+  if(a==='power'){l.on=t.checked;send(mac,{power:l.on});lastEdit=Date.now();render(true)}});
+lights.addEventListener('input',paintGroups);
+lights.addEventListener('click',e=>{const t=e.target;
+  const cx=t.closest('[data-a="cx"]');if(cx){const id='l:'+cx.closest('.card').dataset.mac;cstate.set(id,!isOpen(id));lastEdit=Date.now();render(true);return}
+  if(t.dataset.a==='lfun'){const mc=t.closest('.card').dataset.mac;openLF.has(mc)?openLF.delete(mc):openLF.add(mc);lastEdit=Date.now();render(true);return}
+  if(t.dataset.a!=='mode')return;
+  const mac=t.closest('.card').dataset.mac,l=S.lights.find(x=>x.mac===mac);lastEdit=Date.now();
+  if(t.dataset.v==='white'){l.s=0;send(mac,{s:0,k:l.k})}else{l.s=100;send(mac,{s:100,h:l.h})}render(true)});
+
+$('#groups').addEventListener('click',async e=>{
+  const el=e.target.closest('[data-g]'),a=el&&el.dataset.g,g=S.groups.find(x=>x.id===e.target.closest('.card')?.dataset.gid);if(!a||!g)return;
+  if(a==='gx'){const id='g:'+g.id;cstate.set(id,!isOpen(id));render(true);return}
+  const p=(g.presets||[]).find(x=>x.id===(el&&el.closest('[data-pid]')?.dataset.pid));lastEdit=Date.now();
+  if(a==='pmenu'&&p){menuP=menuP===p.id?null:p.id;render(true);return}
+  if(menuP){menuP=null;render(true)}
+  const none='None of this group\u2019s lights were found, so there is nothing to save yet.';
+  if(a==='on'||a==='off'){api('group/'+g.id,'POST',{power:a==='on'});g.members.forEach(m=>{const l=S.lights.find(x=>x.mac===m);if(l)l.on=a==='on'});render(true)}
+  if(a==='pbtn'){if(openP.has(g.id))openP.delete(g.id);else{openP.add(g.id);openF.delete(g.id);openS.delete(g.id)}render(true)}
+  if(a==='fbtn'){if(openF.has(g.id))openF.delete(g.id);else{openF.add(g.id);openP.delete(g.id);openS.delete(g.id)}render(true)}
+  if(a==='sbtn'){if(openS.has(g.id))openS.delete(g.id);else{openS.add(g.id);openP.delete(g.id);openF.delete(g.id)}render(true)}
+  if(a==='smode'){const c=gset(g);c.mode=el.dataset.v;
+    if(c.mode==='white')setGroup(g,{s:0,k:c.k},true);
+    else{const[h,s]=rgb2hs(...[1,3,5].map(i=>parseInt(c.hex.substr(i,2),16)));setGroup(g,{h,s:s||100},true)}render(true)}
+  if(a==='fx'){const k=el.dataset.fx;
+    if(!el.checked){api('effect/'+g.id,'POST',{effect:'stop'});setFx(g,null)}
+    else if(k==='strobe'){el.checked=false;askConfirm(STROBE_WARN+' It stops by itself after 30 seconds.','Yes, start strobe',()=>startFx(g,'strobe'))}
+    else startFx(g,k)}
+  if(a==='padd'){const lights=snap(g);if(!Object.keys(lights).length)return alert(none);
+    const id='p'+Date.now().toString(36);(g.presets=g.presets||[]).push({id,name:'Preset '+(g.presets.length+1),lights});openD.add(id);saveGroups();render(true)}
+  if(a==='psave'&&p){const lights=snap(g);if(!Object.keys(lights).length)return alert(none);
+    p.lights=lights;saveGroups();openD.delete(p.id);flash[p.id]=Date.now()+1500;render(true);setTimeout(render,1600)}
+  if(a==='pdel'&&p)askDelete(g,p);
+  if(a==='pdup'&&p){g.presets.splice(g.presets.indexOf(p)+1,0,{id:'p'+Date.now().toString(36),name:p.name+'_COPY',lights:JSON.parse(JSON.stringify(p.lights))});saveGroups();render(true)}
+  if(a==='ptoggle'&&p){openD.has(p.id)?openD.delete(p.id):openD.add(p.id);render(true)}
+  if(a==='papply'&&p){const ms=Object.entries(p.lights).filter(([m])=>g.members.includes(m));
+    ms.forEach(([m,c])=>{const l=S.lights.find(x=>x.mac===m);if(l)Object.assign(l,{on:c.on,h:c.h,s:c.s,b:c.b,k:c.k})});render(true);
+    await Promise.all(ms.map(([m,c])=>api('light/'+m,'POST',{h:c.h,s:c.s,b:c.b,k:c.k,power:c.on})))}
+});
+$('#groups').addEventListener('change',e=>{if(e.target.dataset.g!=='pname')return;
+  const g=S.groups.find(x=>x.id===e.target.closest('.card').dataset.gid),p=(g.presets||[]).find(x=>x.id===e.target.closest('[data-pid]').dataset.pid);
+  if(p){p.name=e.target.value.trim()||p.name;saveGroups()}});
+$('#groups').addEventListener('pointerdown',e=>{if(e.target.closest('[data-g="sk"],[data-g="b"]'))down=true});
+let gt;$('#groups').addEventListener('input',e=>{const a=e.target.dataset.g,card=e.target.closest('.card'),g=card&&S.groups.find(x=>x.id===card.dataset.gid);if(!g)return;
+  if(a==='b'){lastEdit=Date.now();clearTimeout(gt);gt=setTimeout(()=>api('group/'+g.id,'POST',{b:+e.target.value}),90)}
+  if(a==='scolor'){lastEdit=Date.now();const c=gset(g);c.hex=e.target.value;const[h,s]=rgb2hs(...[1,3,5].map(i=>parseInt(c.hex.substr(i,2),16)));setGroup(g,{h,s:s||1})}
+  if(a==='sk'){lastEdit=Date.now();const c=gset(g);c.k=+e.target.value;e.target.previousElementSibling.lastElementChild.textContent=c.k+' K';setGroup(g,{k:c.k,s:0})}});
+$('#allOn').onclick=()=>{api('all','POST',{power:true});S.lights.forEach(l=>l.on=true);render(true)};
+$('#allOff').onclick=()=>{api('all','POST',{power:false});S.lights.forEach(l=>l.on=false);render(true)};
+
+document.addEventListener('click',e=>{if(menuP&&!e.target.closest('.mwrap')){menuP=null;render(true)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&menuP){menuP=null;render(true)}});
+// Drag to reorder presets (grip on the left of each row); arrow keys work too
+let drag=null;
+$('#groups').addEventListener('pointerdown',e=>{const gr=e.target.closest('.grip');if(!gr||e.button>0)return;e.preventDefault();
+  const pre=gr.closest('.pre');drag={pre,pan:pre.parentElement,gid:pre.closest('.card').dataset.gid};
+  down=true;pre.classList.add('drag');document.body.style.cursor='grabbing';document.body.style.userSelect='none'});
+document.addEventListener('pointermove',e=>{if(!drag)return;
+  const next=[...drag.pan.querySelectorAll(':scope>.pre')].filter(x=>x!==drag.pre).find(x=>{const r=x.getBoundingClientRect();return e.clientY<r.top+r.height/2});
+  const anchor=next||drag.pan.querySelector(':scope>[data-g="padd"]');
+  if(anchor&&drag.pre.nextElementSibling!==anchor)drag.pan.insertBefore(drag.pre,anchor)});
+function endDrag(){if(!drag)return;const{pre,pan,gid}=drag;drag=null;pre.classList.remove('drag');document.body.style.cursor=document.body.style.userSelect='';
+  const g=S.groups.find(x=>x.id===gid),order=[...pan.querySelectorAll(':scope>.pre')].map(x=>x.dataset.pid);
+  g.presets=order.map(id=>g.presets.find(x=>x.id===id));saveGroups();lastEdit=Date.now();render(true)}
+document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
+$('#groups').addEventListener('keydown',e=>{const gr=e.target.closest&&e.target.closest('.grip');if(!gr||!['ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();
+  const pre=gr.closest('.pre'),g=S.groups.find(x=>x.id===pre.closest('.card').dataset.gid),i=g.presets.findIndex(x=>x.id===pre.dataset.pid),j=i+(e.key==='ArrowUp'?-1:1);
+  if(j<0||j>=g.presets.length)return;[g.presets[i],g.presets[j]]=[g.presets[j],g.presets[i]];saveGroups();lastEdit=Date.now();render(true);
+  document.querySelector(`[data-pid="${pre.dataset.pid}"] .grip`)?.focus()});
+
+const STROBE_WARN='Strobing lights can trigger seizures in people with photosensitive epilepsy. Only continue if everyone nearby is safe around flashing lights.';
+let pendingYes=null;
+function askConfirm(text,yesLabel,fn,equal){$('#cfm').classList.toggle('eq',!!equal);pendingYes=fn;$('#cfmText').textContent=text;$('#cfmYes').textContent=yesLabel;$('#cfm').showModal();$('#cfmNo').focus()}
+function askDelete(g,p){const gid=g.id,pid=p.id;askConfirm(`Delete the preset \u201c${p.name}\u201d? This can\u2019t be undone.`,'Yes, delete',()=>{
+  const g=S.groups.find(x=>x.id===gid);if(!g)return;g.presets=(g.presets||[]).filter(x=>x.id!==pid);openD.delete(pid);saveGroups();render(true)})}
+$('#cfmNo').onclick=()=>$('#cfm').close();
+$('#cfm').addEventListener('close',()=>{if(!$('#cfm').open)pendingYes=null});
+$('#cfmYes').onclick=()=>{const f=pendingYes;$('#cfm').close();if(f)f()};
+
+// Schedules
+const DN=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+$('#sDays').innerHTML=DN.map((d,i)=>`<label><input type="checkbox" value="${i}">${d}</label>`).join('');
+const whenTxt=s=>{const w=s.when||{},d=(s.days||[]).length===7?'every day':(s.days||[]).map(i=>DN[i]).join(', ');
+  return(w.type==='time'?`At ${w.time}`:`At ${w.type}${w.offset?` ${w.offset>0?'+':''}${w.offset} min`:''}`)+' \u00b7 '+d};
+const actTxt=s=>{const a=s.action||{},g=S.groups.find(x=>x.id===a.target),who=a.target==='all'?'all lights':g?`group ${g.name}`:'(missing group)';
+  if(a.type==='preset'){const p=g&&(g.presets||[]).find(x=>x.id===a.preset);return`Apply \u201c${p?p.name:'(missing preset)'}\u201d to ${who}`}
+  if(isFx(a.type)){const c=a.color||{};return`${a.type==='strobe'?`Strobe ${a.seconds} s`:a.type==='flicker'?`Candle flicker ${a.seconds>=120&&a.seconds%60===0?a.seconds/60+' min':a.seconds+' s'}`:`${a.type==='breathe'?'Breathe':'Pulse'} ${a.times}\u00d7`} ${c.hex||''} ${c.b}% on ${who}`}
+  return`Turn ${a.type==='on'?'on':'off'} ${who}`};
+const nextTxt=s=>s.enabled===false?'Disabled':s.next?'Next: '+new Date(s.next).toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):((s.when||{}).type!=='time'&&S.settings.lat==null?'Set your location in Settings':'No upcoming run');
+const actHtml=s=>{const a=s.action||{},c=a.color||{};if(!isFx(a.type)||!/^#[0-9a-f]{6}$/i.test(c.hex||''))return esc(actTxt(s));
+  const txt=actTxt(s),i=txt.indexOf(c.hex);if(i<0)return esc(txt);
+  return esc(txt.slice(0,i))+`<span class="chip"><i style="background:${c.hex}"></i>${esc(c.hex)}</span>`+esc(txt.slice(i+c.hex.length))};
+function sCard(s){const op=isOpen('s:'+s.id);return`<article class="card ${s.enabled===false?'dead':''}" data-sid="${s.id}"><div class="top"><h3><button class="cx" data-s="cx" aria-expanded="${op}">${op?'\u25be':'\u25b8'} ${esc(s.name)}</button></h3>
+  <label class="sw"><input type="checkbox" data-s="en" ${s.enabled===false?'':'checked'} aria-label="Enable ${esc(s.name)}"><i></i></label><p class="st">${esc(whenTxt(s))}</p></div>
+  ${op?`<p style="margin:0">${actHtml(s)}</p><p class="st" style="margin:0">${nextTxt(s)}</p><div class="srow"><div><button data-s="edit">Edit</button></div><div class="cnt" style="text-align:center"><span>Manual Activations</span><b>${s.manual_runs||0}</b></div><div class="cnt" style="text-align:right"><span>Times Activated</span><b>${s.runs||0}</b></div></div>`:''}</article>`}
+const saveSchedules=()=>{lastGroupSave=Date.now();setTimeout(refresh,2700);return api('schedules','PUT',{schedules:S.schedules.map(({next,...s})=>s)})};
+let editS=null;const smsg=t=>$('#sMsg').textContent=t;
+function fillPresets(pre){const g=S.groups.find(x=>x.id===$('#sTgt').value);
+  $('#sPre').innerHTML=((g&&g.presets)||[]).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');if(pre)$('#sPre').value=pre;$('#sPreL').hidden=$('#sAct').value!=='preset'}
+function fillTargets(sel,pre){const pr=$('#sAct').value==='preset';
+  $('#sTgt').innerHTML=(pr?'':'<option value="all">All lights</option>')+S.groups.filter(g=>!pr||(g.presets||[]).length).map(g=>`<option value="${g.id}">${esc(g.name)}${g.hidden?' (hidden)':''}</option>`).join('');
+  if(sel)$('#sTgt').value=sel;fillPresets(pre)}
+const isFx=a=>['breathe','pulse','flicker','strobe'].includes(a),isSecs=a=>a==='strobe'||a==='flicker';
+function syncAct(){const a=$('#sAct').value;$('#sTimesL').hidden=!isFx(a)||isSecs(a);$('#sSecsL').hidden=!isSecs(a);$('#sSecsT').textContent=a==='flicker'?'Seconds (max 3600)':'Seconds (max 60)';
+  $('#sColL').hidden=$('#sBriL').hidden=$('#sFxNote').hidden=!isFx(a)}
+function buildAction(a){const tg=$('#sTgt').value;if(a==='preset')return{type:a,target:tg,preset:$('#sPre').value};if(!isFx(a))return{type:a,target:tg};
+  const hx=$('#sCol').value,[h,s]=rgb2hs(...[1,3,5].map(i=>parseInt(hx.substr(i,2),16))),cl=(v,lo,hi,d)=>Math.min(hi,Math.max(lo,+v||d));
+  return{type:a,target:tg,...(isSecs(a)?{seconds:a==='strobe'?cl($('#sSecs').value,1,60,5):cl($('#sSecs').value,1,3600,60)}:{times:cl($('#sTimes').value,1,1000,3)}),color:{hex:hx,h,s,b:cl($('#sBri').value,1,100,100),k:3500}}}
+let strobeOK=false;
+function syncSched(){const t=$('#sType').value;$('#sTimeL').hidden=t!=='time';$('#sOffL').hidden=t==='time';
+  $('#sLoc').textContent=t!=='time'&&S.settings.lat==null?'Set your latitude/longitude in Settings first so sunrise and sunset can be calculated.':''}
+function openSched(s){editS=s?JSON.parse(JSON.stringify(s)):{id:'s'+Date.now().toString(36),enabled:true,name:'',when:{type:'time',time:'02:00',offset:0},days:[0,1,2,3,4,5,6],action:{type:'off',target:'all'}};
+  const w=editS.when,a=editS.action;$('#sName').value=editS.name;$('#sType').value=w.type;$('#sTime').value=w.time||'02:00';$('#sOff').value=w.offset||0;
+  document.querySelectorAll('#sDays input').forEach(c=>c.checked=(editS.days||[]).includes(+c.value));
+  $('#sAct').value=a.type;fillTargets(a.target,a.preset);$('#sTimes').value=a.times||3;$('#sSecs').value=a.seconds||(a.type==='flicker'?60:5);$('#sCol').value=(a.color||{}).hex||'#ff0000';$('#sBri').value=(a.color||{}).b??100;syncAct();syncSched();smsg('');$('#sDel').hidden=$('#sRun').hidden=!s;$('#sdlg').showModal()}
+// Collapsible Groups / Lights sections + drag-to-reorder edit mode
+const SEC={groups:['#grpToggle','#grpEdit','Groups'],lights:['#litToggle','#litEdit','Lights'],schedules:['#schedToggle','#schedEdit','Schedules']};
+try{for(const k in sec)if(k!=='schedules')sec[k].open=localStorage.getItem('open_'+k)!=='0';localStorage.removeItem('open_schedules');localStorage.removeItem('schedOpen')}catch{} // Schedules always starts hidden; its open state is never remembered
+function paintSec(k){const s=sec[k],[tg,ed,nm]=SEC[k];$('#'+k).hidden=!s.open;if(k==='schedules')$('#newSched').style.visibility=s.open?'visible':'hidden';$(ed).style.visibility=s.open?'visible':'hidden';$(ed).textContent=s.edit?'Done':'Edit';
+  $(tg).setAttribute('aria-expanded',s.open);$(tg).textContent=(s.open?'▾ ':'▸ ')+nm}
+for(const k in SEC){$(SEC[k][0]).onclick=()=>{const s=sec[k];s.open=!s.open;if(!s.open)s.edit=false;if(k!=='schedules')try{localStorage.setItem('open_'+k,s.open?'1':'0')}catch{}paintSec(k);render(true)};
+  $(SEC[k][1]).onclick=()=>{sec[k].edit=!sec[k].edit;paintSec(k);render(true)};paintSec(k)}
+function saveOrder(key,ids){lastEdit=Date.now();
+  if(key==='groups'){const hid=S.groups.filter(g=>g.hidden);S.groups=[...ids.map(id=>S.groups.find(g=>g.id===id)).filter(Boolean),...hid];saveGroups()}
+  else if(key==='schedules'){S.schedules=ids.map(id=>S.schedules.find(x=>x.id===id)).filter(Boolean);saveSchedules()}
+  else{S.settings.light_order=ids;lastGroupSave=Date.now();api('settings','PUT',{light_order:ids})}
+  render(true)}
+const cid=c=>c.dataset.gid||c.dataset.sid||c.dataset.mac,IDATTR={groups:'gid',lights:'mac',schedules:'sid'};
+let cdrag=null;
+for(const key of ['groups','lights','schedules']){const box=$('#'+key);
+  box.addEventListener('pointerdown',e=>{const gr=e.target.closest('.cgrip');if(!gr||e.button>0)return;e.preventDefault();
+    const card=gr.closest('.card');cdrag={card,box,key};down=true;card.classList.add('cdrag');document.body.style.cursor='grabbing';document.body.style.userSelect='none'});
+  box.addEventListener('keydown',e=>{const gr=e.target.closest&&e.target.closest('.cgrip');if(!gr||!/^Arrow(Up|Down|Left|Right)$/.test(e.key))return;e.preventDefault();
+    const card=gr.closest('.card'),kids=[...box.children],i=kids.indexOf(card),j=i+(/Up|Left/.test(e.key)?-1:1),id=cid(card);if(j<0||j>=kids.length)return;
+    j<i?box.insertBefore(card,kids[j]):kids[j].after(card);saveOrder(key,[...box.children].map(cid));
+    box.querySelector(`[data-${IDATTR[key]}="${id}"] .cgrip`)?.focus()})}
+document.addEventListener('pointermove',e=>{if(!cdrag)return;const t=document.elementFromPoint(e.clientX,e.clientY),tc=t&&t.closest&&t.closest('.card');
+  if(!tc||tc===cdrag.card||tc.parentElement!==cdrag.box)return;
+  const kids=[...cdrag.box.children];kids.indexOf(tc)<kids.indexOf(cdrag.card)?cdrag.box.insertBefore(cdrag.card,tc):tc.after(cdrag.card)});
+function endCardDrag(){if(!cdrag)return;const{card,box,key}=cdrag;cdrag=null;card.classList.remove('cdrag');document.body.style.cursor=document.body.style.userSelect='';
+  saveOrder(key,[...box.querySelectorAll(':scope>.card')].map(cid))}
+document.addEventListener('pointerup',endCardDrag);document.addEventListener('pointercancel',endCardDrag);
+
+$('#newSched').onclick=()=>openSched();
+$('#schedules').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;const card=b.closest('.card'),id=card&&card.dataset.sid;
+  if(b.dataset.s==='edit')openSched(S.schedules.find(x=>x.id===id));
+  if(b.dataset.s==='cx'){cstate.set('s:'+id,!isOpen('s:'+id));render(true)}});
+$('#schedules').addEventListener('change',e=>{if(e.target.dataset.s!=='en')return;const s=S.schedules.find(x=>x.id===e.target.closest('.card').dataset.sid);s.enabled=e.target.checked;saveSchedules();render(true)});
+$('#sType').onchange=syncSched;$('#sAct').onchange=()=>{fillTargets();syncAct();if($('#sAct').value==='flicker'&&$('#sCol').value==='#ff0000')$('#sCol').value='#ff9329'};$('#sTgt').onchange=()=>fillPresets();
+$('#sCancel').onclick=()=>$('#sdlg').close();
+$('#sSave').onclick=()=>{const t=$('#sType').value,a=$('#sAct').value,days=[...document.querySelectorAll('#sDays input:checked')].map(c=>+c.value);
+  if(a==='strobe'&&!strobeOK)return askConfirm(STROBE_WARN,'Yes, save strobe schedule',()=>{strobeOK=true;$('#sSave').click();strobeOK=false});
+  if(a==='preset'&&!$('#sPre').value)return smsg('Choose a group that has a saved preset.');
+  if(!days.length)return smsg('Pick at least one day.');if(t==='time'&&!$('#sTime').value)return smsg('Enter a time.');
+  Object.assign(editS,{name:$('#sName').value.trim()||'Schedule',when:{type:t,time:$('#sTime').value,offset:+$('#sOff').value||0},days,
+    action:buildAction(a)});
+  const i=S.schedules.findIndex(x=>x.id===editS.id);i<0?S.schedules.push(editS):S.schedules[i]=editS;saveSchedules();$('#sdlg').close();render(true)};
+$('#sDel').onclick=()=>{const id=editS.id,nm=editS.name||'this schedule';
+  askConfirm(`Delete the schedule \u201c${nm}\u201d? This can\u2019t be undone.`,'Yes, delete',()=>{S.schedules=S.schedules.filter(x=>x.id!==id);saveSchedules();$('#sdlg').close();render(true)},true)};
+$('#sRun').onclick=async()=>{const r=await api('schedule/'+editS.id+'/run');smsg(r.ok?'Ran it now.':'Save the schedule first.');
+  if(r.ok){const s=S.schedules.find(x=>x.id===editS.id);if(s){s.manual_runs=(s.manual_runs||0)+1;lastGroupSave=Date.now();render(true)}}};
+
+// Theme: dark by default, remembered in this browser
+const mq=matchMedia('(prefers-color-scheme: dark)');
+const themeMode=()=>{try{const m=localStorage.getItem('themeMode');return m==='light'||m==='dark'?m:'auto'}catch{return'auto'}};
+function applyTheme(){const m=themeMode(),eff=m==='auto'?(mq.matches?'dark':'light'):m;document.documentElement.dataset.theme=eff;
+  const b=$('#theme');b.textContent=eff==='dark'?'\u{1F319}':'☀️';
+  b.title=b.ariaLabel=eff==='dark'?'Dark theme (click for light)':'Light theme (click for dark)';
+  $('#themeAuto').classList.toggle('act',m==='auto');$('#themeAuto').setAttribute('aria-pressed',m==='auto')}
+$('#theme').onclick=()=>{try{localStorage.setItem('themeMode',document.documentElement.dataset.theme==='dark'?'light':'dark')}catch{}applyTheme()};
+$('#themeAuto').onclick=()=>{try{localStorage.removeItem('themeMode')}catch{}applyTheme()};
+mq.addEventListener('change',applyTheme);applyTheme();
+
+// Settings
+const dlg=$('#dlg'),saveGroups=()=>{lastGroupSave=Date.now();return api('groups','PUT',{groups:S.groups})};
+function drawG(){$('#gedit').innerHTML=S.groups.map((g,i)=>`<div style="margin-bottom:12px" data-i="${i}">
+  <div class="row"><input type="text" data-f="name" value="${esc(g.name)}" style="flex:1" aria-label="Group name"><button data-f="del">Delete</button></div>
+  <label class="hidt"><span class="sw sm"><input type="checkbox" data-f="hid" ${g.hidden?'checked':''}><i></i></span>Hidden group <small>(no card on the page; still works in schedules)</small></label>
+  <div class="mem">${S.lights.map(l=>`<label><input type="checkbox" data-f="m" value="${l.mac}" ${g.members.includes(l.mac)?'checked':''}>${esc(l.label)}</label>`).join('')||'<small>No lights found yet.</small>'}</div></div>`).join('')||'<small>No groups yet.</small>'}
+$('#openSet').onclick=()=>{const s=S.settings;$('#bc').value=s.broadcast;$('#ips').value=(s.ips||[]).join(', ');$('#scan').value=(s.scan||[]).join(', ');$('#msg').textContent='';$('#ver').textContent=S.version?'Version '+S.version:'';$('#lat').value=s.lat??'';$('#lon').value=s.lon??'';$('#poll').value=s.poll;$('#diag').textContent=S.diag?`This server is ${S.diag.local_ip||'unknown'} · replies from lights so far: ${S.diag.replies}`:'';$('#tr').value=s.transition;drawG();dlg.showModal()};
+$('#close').onclick=()=>{dlg.close();render(true)};
+$('#addG').onclick=()=>{const n=$('#newG').value.trim();if(!n)return;S.groups.push({id:'g'+Date.now().toString(36),name:n,members:[]});$('#newG').value='';saveGroups();drawG()};
+$('#gedit').addEventListener('input',e=>{const f=e.target.dataset.f,g=S.groups[e.target.closest('[data-i]').dataset.i];
+  if(f==='name')g.name=e.target.value;if(f==='hid'){g.hidden=e.target.checked;lastEdit=Date.now()}if(f==='m')g.members=e.target.checked?[...new Set([...g.members,e.target.value])]:g.members.filter(m=>m!==e.target.value);saveGroups()});
+function deleteGroup(gid){const i=S.groups.findIndex(x=>x.id===gid);if(i<0)return;
+  S.groups.splice(i,1);saveGroups();
+  if(S.schedules.some(s=>(s.action||{}).target===gid)){S.schedules=S.schedules.filter(s=>(s.action||{}).target!==gid);saveSchedules()}
+  openP.delete(gid);openF.delete(gid);drawG()}
+$('#gedit').addEventListener('click',e=>{if(e.target.dataset.f!=='del')return;
+  const g=S.groups[e.target.closest('[data-i]').dataset.i],gid=g.id,name=g.name||'this group';
+  const np=(g.presets||[]).length,ns=S.schedules.filter(s=>(s.action||{}).target===gid).length;
+  const final=()=>askConfirm(`Delete the group “${name}”? This can’t be undone.`,'Yes, delete',()=>deleteGroup(gid));
+  if(!np&&!ns)return final();
+  const parts=[np?`${np} preset${np==1?'':'s'}`:'',ns?`${ns} schedule${ns==1?'':'s'}`:''].filter(Boolean).join(' and ');
+  askConfirm(`Warning: “${name}” has ${parts} that use it. Deleting the group will permanently delete all of its presets and every schedule that targets it. They will be lost for good.`,'Yes, continue',final)});
+$('#saveSet').onclick=async()=>{const r=await api('settings','PUT',{broadcast:$('#bc').value,ips:$('#ips').value.split(','),scan:$('#scan').value.split(','),lat:$('#lat').value,lon:$('#lon').value,poll:+$('#poll').value,transition:+$('#tr').value});
+  if(!r.ok){$('#msg').textContent=r.error||'Save failed.';return}
+  await refresh();$('#msg').textContent='Saved.';setTimeout(()=>{dlg.close();render(true)},700)};
+</script>
+</body>
+</html>
