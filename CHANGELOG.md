@@ -4,6 +4,13 @@ Each release lists what changed and which files were updated. Newest first.
 
 Versions use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes. The version is set in `hl_lifx_control.py` (`VERSION`) and shown in Settings.
 
+## 1.1.1 - 2026-11-19
+
+**Files updated:** `index.html`, `hl_lifx_control.py` (version number only), `README.md` (version number only), `CHANGELOG.md`
+
+### Changed
+- **IP addresses are now hidden by default.** The "Show light IP addresses on cards" setting starts off on every device and shows IPs only after you turn it on there. A device where you'd already switched it on or off in 1.1.0 keeps that choice. Devices that never touched the setting (which were showing IPs) now hide them until you turn it on.
+
 ## 1.1.0 - 2026-11-19
 
 **Files updated:** `index.html`, `hl_lifx_control.py` (version number only), `README.md` (version number only), `CHANGELOG.md`

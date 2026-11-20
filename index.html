@@ -107,7 +107,7 @@ legend{padding:0 6px;font-weight:600}
 .mem{display:flex;flex-wrap:wrap;gap:4px 14px}.mem label{display:flex;gap:6px;align-items:center;font-size:.9rem}
 small{color:var(--mut)}
 </style>
-<script>try{if(localStorage.getItem("showIps")==="0")document.documentElement.classList.add("noip")}catch(e){}try{var m=localStorage.getItem("themeMode");document.documentElement.dataset.theme=m==="light"||m==="dark"?m:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch(e){}</script>
+<script>document.documentElement.classList.add("noip");try{if(localStorage.getItem("showIps")==="1")document.documentElement.classList.remove("noip")}catch(e){}try{var m=localStorage.getItem("themeMode");document.documentElement.dataset.theme=m==="light"||m==="dark"?m:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch(e){}</script>
 </head>
 <body>
 <div id="alert" role="alert" hidden><div><strong id="alertT"></strong><span id="alertM"></span></div><button id="alertX" aria-label="Dismiss">&times;</button></div>
@@ -137,7 +137,7 @@ small{color:var(--mut)}
     <label>Longitude<input type="number" id="lon" step="any" placeholder="e.g. -74.01"></label>
     <small>Schedules use this server's clock and timezone. Sun times are calculated locally; no internet needed.</small></fieldset>
   <fieldset><legend>Display</legend>
-    <label class="hidt"><span class="sw sm"><input type="checkbox" id="showIps" checked><i></i></span>Show light IP addresses on cards <small>(this device only)</small></label></fieldset>
+    <label class="hidt"><span class="sw sm"><input type="checkbox" id="showIps"><i></i></span>Show light IP addresses on cards <small>(this device only)</small></label></fieldset>
   <fieldset><legend>Behavior</legend>
     <label>Fade time when changing (seconds)<input type="number" id="tr" min="0" step="0.1"></label></fieldset>
   <small id="msg" role="status"></small>
