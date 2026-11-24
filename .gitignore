@@ -1,6 +1,9 @@
 # Your own settings: home location, light IPs, groups, presets, schedules. Keep out of the repo.
 config.json
 data.json
+.config/
+*.migrated-v1
+*.corrupt-*
 
 # Python
 __pycache__/

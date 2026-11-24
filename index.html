@@ -47,9 +47,18 @@ input[type=text],input[type=number],input[type=time],select{font:inherit;backgro
 .g{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .g>div:first-child,.top>h3{min-width:0}
 .empty{color:var(--mut)}
-.hbtns{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-@media(max-width:700px){header{flex-wrap:nowrap;align-items:flex-start}header>div:first-child{flex:1;min-width:0}.hbtns{flex:none;flex-direction:column;align-items:flex-end}}
-.hrow{display:flex;align-items:center;gap:12px}.hrow .push{margin-left:auto}.hrow button{font-size:.9rem;padding:4px 12px}
+.hbtns{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none}
+@media(max-width:700px){header{flex-wrap:nowrap;align-items:flex-start}header>div:first-child{flex:1;min-width:0}}
+#allOff{background:#c0392b;border-color:#c0392b;color:#fff}#allOff:hover{background:#d64535;border-color:#d64535}
+.clk{font-size:.9rem;font-weight:400;color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap}
+.xs{margin:0 0 14px}.xs label{display:grid;gap:4px}.xs [hidden]{display:none!important}
+#gToggle{font:inherit;font-weight:600;border:0;background:none;padding:2px 4px;border-radius:6px;cursor:pointer}
+.grow{border-bottom:1px solid var(--line);padding:4px 0 8px;margin-bottom:6px}.grow.gdrag{background:var(--bg);box-shadow:0 0 0 2px var(--acc);border-radius:10px}
+.grh{display:flex;align-items:center;gap:8px}.grh .gname{flex:1;min-width:0;text-align:left;border:0;background:none;padding:6px 4px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:6px}
+.grow .ged{margin-top:6px}
+.nrow{display:flex;justify-content:space-between;align-items:center}.nrow button{padding:5px 14px}.nrow .eye{padding:5px 12px;font-size:1.05rem;line-height:1}
+.pre.ph .pnb{opacity:.6}
+.hrow{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap}.hrow .hbtn{white-space:nowrap}.hrow .push{margin-left:auto}.hrow button{font-size:.9rem;padding:4px 12px}
 .hrow .hbtn{font:inherit;font-weight:700;padding:2px 4px;margin-left:-4px;border:0;background:none;border-radius:6px;cursor:pointer}
 .grid[hidden]{display:none}
 #groups,#lights,#schedules{align-items:start}
@@ -115,15 +124,15 @@ small{color:var(--mut)}
   <div><h1>Lights</h1><p class="sub" id="count">Looking for lights…</p></div>
   <div class="hbtns"><div class="row"><button class="p" id="allOn">All on</button><button id="allOff">All off</button></div><button id="openSet">Settings</button></div>
 </header>
-<h2 class="hrow"><button id="schedToggle" class="hbtn" aria-expanded="false" aria-controls="schedules">Schedules</button><button id="schedEdit">Edit</button><button id="newSched" class="push">+ New schedule</button></h2>
+<h2 class="hrow"><button id="schedToggle" class="hbtn" aria-expanded="false" aria-controls="schedules">Schedules</button><span id="srvClk" class="clk" title="Server time"></span><button id="schedEdit">Edit</button><button id="newSched" class="push">+ New schedule</button></h2>
 <div class="grid" id="schedules" hidden></div>
 <h2 class="hrow"><button id="grpToggle" class="hbtn" aria-expanded="true" aria-controls="groups">Groups</button><button id="grpEdit">Edit</button></h2><div class="grid" id="groups"></div>
 <h2 class="hrow"><button id="litToggle" class="hbtn" aria-expanded="true" aria-controls="lights">Lights</button><button id="litEdit">Edit</button></h2><div class="grid" id="lights"></div>
 
 <dialog id="dlg">
   <div class="row" style="justify-content:space-between;margin-bottom:14px"><h3 style="font-size:1.3rem;margin:0">Settings</h3><div class="row"><button id="themeAuto" aria-pressed="true" title="Follow this device's light/dark setting">Auto</button><button id="theme" class="tbtn"></button></div></div>
-  <fieldset><legend>Groups</legend><div id="gedit"></div>
-    <div class="row"><input type="text" id="newG" placeholder="New group name" style="flex:1"><button id="addG">Add group</button></div></fieldset>
+  <fieldset><legend><button id="gToggle" aria-expanded="false">▸ Groups</button></legend><div id="gBody" hidden><div id="gedit"></div>
+    <div class="row"><input type="text" id="newG" placeholder="New group name" style="flex:1"><button id="addG">Add group</button></div></div></fieldset>
   <fieldset><legend>Network</legend>
     <label>Broadcast address<input type="text" id="bc"></label>
     <small>Use your subnet's broadcast (e.g. 192.168.1.255) if lights aren't found.</small>
@@ -137,9 +146,10 @@ small{color:var(--mut)}
     <label>Longitude<input type="number" id="lon" step="any" placeholder="e.g. -74.01"></label>
     <small>Schedules use this server's clock and timezone. Sun times are calculated locally; no internet needed.</small></fieldset>
   <fieldset><legend>Display</legend>
-    <label class="hidt"><span class="sw sm"><input type="checkbox" id="showIps"><i></i></span>Show light IP addresses on cards <small>(this device only)</small></label></fieldset>
+    <label class="hidt"><span class="sw sm"><input type="checkbox" id="showIps"><i></i></span>Show light IP addresses on cards <small>(this device only)</small></label>
+    <label class="hidt"><span class="sw sm"><input type="checkbox" id="use24"><i></i></span>Use 24-hour time <small>(this device only; clock and schedule times)</small></label></fieldset>
   <fieldset><legend>Behavior</legend>
-    <label>Fade time when changing (seconds)<input type="number" id="tr" min="0" step="0.1"></label></fieldset>
+    <label>Default fade time (seconds)<input type="number" id="tr" min="0" step="0.1"></label><small>Used for changes and by schedules that don’t set their own fade.</small></fieldset>
   <small id="msg" role="status"></small>
   <small id="ver" style="display:block;margin-bottom:10px"></small>
   <div class="row" style="justify-content:flex-end"><button id="close">Close</button><button class="p" id="saveSet">Save settings</button></div>
@@ -154,17 +164,10 @@ small{color:var(--mut)}
     <label id="sOffL">Minutes after (negative = before)<input type="number" id="sOff" step="5"></label>
     <small id="sLoc"></small>
     <div class="mem" id="sDays"></div></fieldset>
-  <fieldset><legend>Do this</legend>
-    <select id="sAct" aria-label="Action"><option value="off">Turn off</option><option value="on">Turn on</option><option value="preset">Apply a preset</option><option value="breathe">Breathe</option><option value="pulse">Pulse (flash)</option><option value="flicker">Candle flicker</option><option value="strobe">Strobe</option></select>
-    <label>Lights<select id="sTgt"></select></label>
-    <label id="sPreL">Preset<select id="sPre"></select></label>
-    <label id="sTimesL">Times<input type="number" id="sTimes" min="1" max="1000" value="3"></label>
-    <label id="sSecsL"><span id="sSecsT">Seconds (max 60)</span><input type="number" id="sSecs" min="1" max="60" value="5"></label>
-    <label id="sColL">Color<input type="color" id="sCol" value="#ff0000"></label>
-    <label id="sBriL">Brightness (%)<input type="number" id="sBri" min="1" max="100" value="100"></label>
-    <small id="sFxNote">Lights do this in the color above, then go back to what they were doing. Lights that are off are skipped.</small></fieldset>
+  <div id="sSteps"></div>
+  <div class="row" style="margin-bottom:12px"><button id="sAddStep">+ Add step</button></div>
   <small id="sMsg" role="status"></small>
-  <div class="row" style="justify-content:space-between"><div class="row"><button id="sDel">Delete</button><button id="sRun">Run now</button></div>
+  <div class="row" style="justify-content:space-between"><div class="row"><button id="sDel">Delete</button><button id="sRun">Run now</button><button id="sStop" hidden>Stop</button></div>
     <div class="row"><button id="sCancel">Cancel</button><button class="p" id="sSave">Save</button></div></div>
 </dialog>
 
@@ -176,12 +179,20 @@ small{color:var(--mut)}
 
 <script>
 const $=s=>document.querySelector(s);
-let S={lights:[],groups:[],schedules:[],settings:{}},down=false,lastEdit=0,lastGroupSave=0,openP=new Set(),flash={},openD=new Set(),menuP=null,openF=new Set(),openLF=new Set(),openS=new Set(),GS={};
+let S={lights:[],groups:[],schedules:[],settings:{}},showH=new Set(),down=false,lastEdit=0,lastGroupSave=0,openP=new Set(),flash={},openD=new Set(),menuP=null,openF=new Set(),openLF=new Set(),openS=new Set(),GS={};
 const mob=matchMedia('(max-width:700px), (pointer:coarse)'),cstate=new Map(),isOpen=id=>cstate.has(id)?cstate.get(id):!mob.matches; // cards start collapsed on phones/touch devices
 const sec={groups:{open:true,edit:false},lights:{open:true,edit:false},schedules:{open:false,edit:false}};
 const api=(p,m='POST',b)=>fetch('/api/'+p,{method:m,headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined,signal:m==='GET'&&AbortSignal.timeout?AbortSignal.timeout(6000):undefined}).then(async r=>{try{return await r.json()}catch{return{ok:false,error:`The server replied with HTTP ${r.status}, not JSON. Is this page being served by hl_lifx_control.py?`}}})
   .catch(e=>({ok:false,error:location.protocol==='file:'?'This page was opened as a file. Open it from the server instead, e.g. http://localhost:8080':`Can\u2019t reach ${location.host}. Make sure this device is on your home network and the lights service (hl_lifx_control.py) is running. (${e.message})`}));
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad2=n=>String(n).padStart(2,'0');
+const use24=()=>{try{return localStorage.getItem('use24h')!=='0'}catch{return true}};
+const fmtT=t=>{const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');if(!m)return t||'';const h=+m[1];return use24()?`${pad2(h)}:${m[2]}`:`${h%12||12}:${m[2]} ${h<12?'AM':'PM'}`};
+let clk=null;
+function tickClock(){const el=$('#srvClk');if(!clk){el.textContent='';return}
+  const d=new Date(clk.epoch*1000+(Date.now()-clk.at)+clk.off*1000),h=d.getUTCHours(),m=pad2(d.getUTCMinutes()),s=pad2(d.getUTCSeconds());
+  el.textContent=use24()?`${pad2(h)}:${m}:${s}`:`${h%12||12}:${m}:${s} ${h<12?'AM':'PM'}`}
+setInterval(tickClock,1000);
 const hsb2rgb=(h,s,v)=>{s/=100;v/=100;const f=n=>{const k=(n+h/60)%6;return v-v*s*Math.max(0,Math.min(k,4-k,1))};return[f(5),f(3),f(1)].map(x=>Math.round(x*255))};
 const rgb2hs=(r,g,b)=>{r/=255;g/=255;b/=255;const m=Math.max(r,g,b),d=m-Math.min(r,g,b);let h=0;if(d){h=m===r?((g-b)/d)%6:m===g?(b-r)/d+2:(r-g)/d+4;h=(h*60+360)%360}return[Math.round(h),m?Math.round(d/m*100):0]};
 const hex=a=>'#'+a.map(x=>x.toString(16).padStart(2,'0')).join('');
@@ -208,15 +219,17 @@ function card(l){const col=l.s>0,r=rgbOf(l),op=isOpen('l:'+l.mac);
 const snap=g=>{const o={};S.lights.filter(l=>g.members.includes(l.mac)).forEach(l=>o[l.mac]={label:l.label,on:l.on,h:l.h,s:l.s,b:l.b,k:l.k});return o};
 const swatch=c=>hex(c.s>0?hsb2rgb(c.h,c.s,100):kRgb(c.k));
 const chip=c=>`<span class="chip"><i style="background:${swatch(c)}"></i>${esc(c.label)}: ${c.on?(c.s>0?`Color ${swatch(c)}`:`White ${c.k} K`)+` · ${c.b}%`:'Off'}</span>`;
-function presetPanel(g){const ps=g.presets||[];
-  return`<div class="pan">${ps.map(p=>{const o=openD.has(p.id);return`<div class="pre" data-pid="${p.id}">
-    <div class="prow"><span class="grip" role="button" tabindex="0" title="Drag to reorder" aria-label="Reorder ${esc(p.name)} (up and down arrow keys)"></span><button data-g="papply" class="p pnb" title="Apply preset"><span>${esc(p.name)}</span><span aria-hidden="true">${Date.now()<(flash[p.id]||0)?'Saved \u2713':'\u25b8'}</span></button>
+const pvis=(g,p)=>!p.hidden||showH.has(g.id)||openD.has(p.id);
+function presetPanel(g){const ps=(g.presets||[]).filter(p=>pvis(g,p));
+  return`<div class="pan">${ps.map(p=>{const o=openD.has(p.id);return`<div class="pre ${p.hidden?'ph':''}" data-pid="${p.id}">
+    <div class="prow"><span class="grip" role="button" tabindex="0" title="Drag to reorder" aria-label="Reorder ${esc(p.name)} (up and down arrow keys)"></span><button data-g="papply" class="p pnb" title="Apply preset"><span>${esc(p.name)}${p.hidden?' <small>(hidden)</small>':''}</span><span aria-hidden="true">${Date.now()<(flash[p.id]||0)?'Saved \u2713':'\u25b8'}</span></button>
       <div class="mwrap"><button data-g="pmenu" class="hb" aria-haspopup="menu" aria-expanded="${menuP===p.id}" aria-label="Options for ${esc(p.name)}">\u{1F354}</button>
       ${menuP===p.id?`<div class="menu" role="menu"><button role="menuitem" data-g="ptoggle">Edit Preset</button><button role="menuitem" data-g="pdup">Duplicate Preset</button><button role="menuitem" data-g="pdel">Delete Preset</button></div>`:''}</div></div>
     ${o?`<div class="pdet"><div class="chips col">${Object.values(p.lights).map(chip).join('')}</div>
       <label class="l">Rename<input type="text" data-g="pname" value="${esc(p.name)}"></label>
+      <label class="hidt"><span class="sw sm"><input type="checkbox" data-g="phide" ${p.hidden?'checked':''}><i></i></span>Hidden preset <small>(can\u2019t be activated here; still works in schedules)</small></label>
       <div class="row"><button data-g="psave" title="Overwrite with the lights' current settings">${Date.now()<(flash[p.id]||0)?'Saved \u2713':'Save current settings'}</button></div></div>`:''}</div>`}).join('')||'<p class="empty">No presets yet. Set the lights how you like, then add one.</p>'}
-    <button data-g="padd" aria-label="New preset from current settings">+ New preset</button></div>`}
+    <div class="nrow" data-nrow><button data-g="padd" aria-label="New preset from current settings">+ New preset</button><button class="eye" data-g="peye" aria-pressed="${showH.has(g.id)}" title="${showH.has(g.id)?'Hide hidden presets':'Show hidden presets'}" aria-label="${showH.has(g.id)?'Hide hidden presets':'Show hidden presets'}">${showH.has(g.id)?'\u{1F441}':'\u2323'}</button></div></div>`}
 // A group's color is the average of its lights that are on (same colors the light cards show)
 function groupColor(g){const on=S.lights.filter(l=>g.members.includes(l.mac)&&l.on&&l.online);
   return on.length?hex([0,1,2].map(i=>Math.round(on.reduce((s,l)=>s+rgbOf(l)[i],0)/on.length))):null}
@@ -265,7 +278,7 @@ addEventListener('resize',()=>{if(!$('#alert').hidden)document.body.style.paddin
 function health(){if(S.lights.length){emptySince=null;if(alertKey==='empty')showAlert(null)}
   else{emptySince=emptySince||Date.now();if(Date.now()-emptySince>20000)showAlert('empty','No lights found yet','Check Settings › Network: the broadcast address, a scan range, or add a light’s IP. Make sure this server is on the same network as the lights.')}}
 async function refresh(){const s=await api('state','GET');
-  if(s.lights){fails=0;if(alertKey==='conn')showAlert(null);const keep=Date.now()-lastGroupSave<2500,g=keep?S.groups:s.groups,sc=keep?S.schedules:s.schedules,lo=S.settings.light_order;S=s;S.groups=g;S.schedules=sc;if(keep&&lo)S.settings.light_order=lo;render();health()}
+  if(s.lights){fails=0;if(alertKey==='conn')showAlert(null);const keep=Date.now()-lastGroupSave<2500,g=keep?S.groups:s.groups,sc=keep?S.schedules:s.schedules,lo=S.settings.light_order;S=s;S.groups=g;S.schedules=sc;if(keep&&lo)S.settings.light_order=lo;if(s.server_time){clk={epoch:s.server_time.epoch,off:s.server_time.utc_offset,at:Date.now()};tickClock()}render();health();syncRun()}
   else if(++fails>=2){showAlert('conn','Not connected to the lights server',s.error||'Can’t reach the server.');if(!S.lights.length)$('#count').textContent='Not connected'}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});addEventListener('online',refresh);
 setInterval(refresh,2000);refresh();
@@ -311,6 +324,7 @@ $('#groups').addEventListener('click',async e=>{
     const id='p'+Date.now().toString(36);(g.presets=g.presets||[]).push({id,name:'Preset '+(g.presets.length+1),lights});openD.add(id);saveGroups();render(true)}
   if(a==='psave'&&p){const lights=snap(g);if(!Object.keys(lights).length)return alert(none);
     p.lights=lights;saveGroups();openD.delete(p.id);flash[p.id]=Date.now()+1500;render(true);setTimeout(render,1600)}
+  if(a==='peye'){showH.has(g.id)?showH.delete(g.id):showH.add(g.id);render(true)}
   if(a==='pdel'&&p)askDelete(g,p);
   if(a==='pdup'&&p){g.presets.splice(g.presets.indexOf(p)+1,0,{id:'p'+Date.now().toString(36),name:p.name+'_COPY',lights:JSON.parse(JSON.stringify(p.lights))});saveGroups();render(true)}
   if(a==='ptoggle'&&p){openD.has(p.id)?openD.delete(p.id):openD.add(p.id);render(true)}
@@ -318,7 +332,8 @@ $('#groups').addEventListener('click',async e=>{
     ms.forEach(([m,c])=>{const l=S.lights.find(x=>x.mac===m);if(l)Object.assign(l,{on:c.on,h:c.h,s:c.s,b:c.b,k:c.k})});render(true);
     await Promise.all(ms.map(([m,c])=>api('light/'+m,'POST',{h:c.h,s:c.s,b:c.b,k:c.k,power:c.on})))}
 });
-$('#groups').addEventListener('change',e=>{if(e.target.dataset.g!=='pname')return;
+$('#groups').addEventListener('change',e=>{if(e.target.dataset.g==='phide'){const g=S.groups.find(x=>x.id===e.target.closest('.card').dataset.gid),p=(g.presets||[]).find(x=>x.id===e.target.closest('[data-pid]').dataset.pid);if(p){p.hidden=e.target.checked||undefined;if(!p.hidden)delete p.hidden;saveGroups();lastEdit=Date.now()}return}
+  if(e.target.dataset.g!=='pname')return;
   const g=S.groups.find(x=>x.id===e.target.closest('.card').dataset.gid),p=(g.presets||[]).find(x=>x.id===e.target.closest('[data-pid]').dataset.pid);
   if(p){p.name=e.target.value.trim()||p.name;saveGroups()}});
 $('#groups').addEventListener('pointerdown',e=>{if(e.target.closest('[data-g="sk"],[data-g="b"]'))down=true});
@@ -338,15 +353,15 @@ $('#groups').addEventListener('pointerdown',e=>{const gr=e.target.closest('.grip
   down=true;pre.classList.add('drag');document.body.style.cursor='grabbing';document.body.style.userSelect='none'});
 document.addEventListener('pointermove',e=>{if(!drag)return;
   const next=[...drag.pan.querySelectorAll(':scope>.pre')].filter(x=>x!==drag.pre).find(x=>{const r=x.getBoundingClientRect();return e.clientY<r.top+r.height/2});
-  const anchor=next||drag.pan.querySelector(':scope>[data-g="padd"]');
+  const anchor=next||drag.pan.querySelector(':scope>[data-nrow]');
   if(anchor&&drag.pre.nextElementSibling!==anchor)drag.pan.insertBefore(drag.pre,anchor)});
 function endDrag(){if(!drag)return;const{pre,pan,gid}=drag;drag=null;pre.classList.remove('drag');document.body.style.cursor=document.body.style.userSelect='';
   const g=S.groups.find(x=>x.id===gid),order=[...pan.querySelectorAll(':scope>.pre')].map(x=>x.dataset.pid);
-  g.presets=order.map(id=>g.presets.find(x=>x.id===id));saveGroups();lastEdit=Date.now();render(true)}
+  const set=new Set(order);let k=0;g.presets=g.presets.map(p=>set.has(p.id)?g.presets.find(x=>x.id===order[k++]):p);saveGroups();lastEdit=Date.now();render(true)}
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 $('#groups').addEventListener('keydown',e=>{const gr=e.target.closest&&e.target.closest('.grip');if(!gr||!['ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();
-  const pre=gr.closest('.pre'),g=S.groups.find(x=>x.id===pre.closest('.card').dataset.gid),i=g.presets.findIndex(x=>x.id===pre.dataset.pid),j=i+(e.key==='ArrowUp'?-1:1);
-  if(j<0||j>=g.presets.length)return;[g.presets[i],g.presets[j]]=[g.presets[j],g.presets[i]];saveGroups();lastEdit=Date.now();render(true);
+  const pre=gr.closest('.pre'),g=S.groups.find(x=>x.id===pre.closest('.card').dataset.gid),vl=g.presets.filter(p=>pvis(g,p)),vi=vl.findIndex(x=>x.id===pre.dataset.pid),vj=vi+(e.key==='ArrowUp'?-1:1);
+  if(vj<0||vj>=vl.length)return;const i=g.presets.indexOf(vl[vi]),j=g.presets.indexOf(vl[vj]);[g.presets[i],g.presets[j]]=[g.presets[j],g.presets[i]];saveGroups();lastEdit=Date.now();render(true);
   document.querySelector(`[data-pid="${pre.dataset.pid}"] .grip`)?.focus()});
 
 const STROBE_WARN='Strobing lights can trigger seizures in people with photosensitive epilepsy. Only continue if everyone nearby is safe around flashing lights.';
@@ -362,47 +377,83 @@ $('#cfmYes').onclick=()=>{const f=pendingYes;$('#cfm').close();if(f)f()};
 const DN=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 $('#sDays').innerHTML=DN.map((d,i)=>`<label><input type="checkbox" value="${i}">${d}</label>`).join('');
 const whenTxt=s=>{const w=s.when||{},d=(s.days||[]).length===7?'every day':(s.days||[]).map(i=>DN[i]).join(', ');
-  return(w.type==='time'?`At ${w.time}`:`At ${w.type}${w.offset?` ${w.offset>0?'+':''}${w.offset} min`:''}`)+' \u00b7 '+d};
+  return(w.type==='time'?`At ${fmtT(w.time)}`:`At ${w.type}${w.offset?` ${w.offset>0?'+':''}${w.offset} min`:''}`)+' \u00b7 '+d};
 const actTxt=s=>{const a=s.action||{},g=S.groups.find(x=>x.id===a.target),who=a.target==='all'?'all lights':g?`group ${g.name}`:'(missing group)';
   if(a.type==='preset'){const p=g&&(g.presets||[]).find(x=>x.id===a.preset);return`Apply \u201c${p?p.name:'(missing preset)'}\u201d to ${who}`}
   if(isFx(a.type)){const c=a.color||{};return`${a.type==='strobe'?`Strobe ${a.seconds} s`:a.type==='flicker'?`Candle flicker ${a.seconds>=120&&a.seconds%60===0?a.seconds/60+' min':a.seconds+' s'}`:`${a.type==='breathe'?'Breathe':'Pulse'} ${a.times}\u00d7`} ${c.hex||''} ${c.b}% on ${who}`}
   return`Turn ${a.type==='on'?'on':'off'} ${who}`};
-const nextTxt=s=>s.enabled===false?'Disabled':s.next?'Next: '+new Date(s.next).toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):((s.when||{}).type!=='time'&&S.settings.lat==null?'Set your location in Settings':'No upcoming run');
+const moreTxt=s=>{const n=(s.steps||[]).length;return n?` \u00b7 then ${n} more step${n==1?'':'s'}`:''};
+const runTxt=s=>s.running?(s.running.of>1?`Running, step ${s.running.step} of ${s.running.of}`:'Running'):null;
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const fmtNext=iso=>{const m=/^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)/.exec(iso||'');if(!m)return iso||''; // shown in the server's time zone, as written by the server
+  return`${WD[new Date(Date.UTC(+m[1],+m[2]-1,+m[3])).getUTCDay()]}, ${MON[+m[2]-1]} ${+m[3]}, ${fmtT(m[4]+':'+m[5])}`};
+const nextTxt=s=>s.enabled===false?'Disabled':s.next?'Next: '+fmtNext(s.next):((s.when||{}).type!=='time'&&S.settings.lat==null?'Set your location in Settings':'No upcoming run');
 const actHtml=s=>{const a=s.action||{},c=a.color||{};if(!isFx(a.type)||!/^#[0-9a-f]{6}$/i.test(c.hex||''))return esc(actTxt(s));
   const txt=actTxt(s),i=txt.indexOf(c.hex);if(i<0)return esc(txt);
   return esc(txt.slice(0,i))+`<span class="chip"><i style="background:${c.hex}"></i>${esc(c.hex)}</span>`+esc(txt.slice(i+c.hex.length))};
 function sCard(s){const op=isOpen('s:'+s.id);return`<article class="card ${s.enabled===false?'dead':''}" data-sid="${s.id}"><div class="top"><h3><button class="cx" data-s="cx" aria-expanded="${op}">${op?'\u25be':'\u25b8'} ${esc(s.name)}</button></h3>
-  <label class="sw"><input type="checkbox" data-s="en" ${s.enabled===false?'':'checked'} aria-label="Enable ${esc(s.name)}"><i></i></label><p class="st">${esc(whenTxt(s))}</p></div>
-  ${op?`<p style="margin:0">${actHtml(s)}</p><p class="st" style="margin:0">${nextTxt(s)}</p><div class="srow"><div><button data-s="edit">Edit</button></div><div class="cnt" style="text-align:center"><span>Manual Activations</span><b>${s.manual_runs||0}</b></div><div class="cnt" style="text-align:right"><span>Times Activated</span><b>${s.runs||0}</b></div></div>`:''}</article>`}
+  <label class="sw"><input type="checkbox" data-s="en" ${s.enabled===false?'':'checked'} aria-label="Enable ${esc(s.name)}"><i></i></label><p class="st">${esc(runTxt(s)||whenTxt(s))}</p></div>
+  ${op?`<p style="margin:0">${actHtml(s)}${esc(moreTxt(s))}</p>${s.running?'<div><button data-s="stop">Stop</button></div>':`<p class="st" style="margin:0">${nextTxt(s)}</p>`}<div class="srow"><div><button data-s="edit">Edit</button></div><div class="cnt" style="text-align:center"><span>Manual Activations</span><b>${s.manual_runs||0}</b></div><div class="cnt" style="text-align:right"><span>Times Activated</span><b>${s.runs||0}</b></div></div>`:''}</article>`}
 const saveSchedules=()=>{lastGroupSave=Date.now();setTimeout(refresh,2700);return api('schedules','PUT',{schedules:S.schedules.map(({next,...s})=>s)})};
 let editS=null;const smsg=t=>$('#sMsg').textContent=t;
-function fillPresets(pre){const g=S.groups.find(x=>x.id===$('#sTgt').value);
-  $('#sPre').innerHTML=((g&&g.presets)||[]).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');if(pre)$('#sPre').value=pre;$('#sPreL').hidden=$('#sAct').value!=='preset'}
-function fillTargets(sel,pre){const pr=$('#sAct').value==='preset';
-  $('#sTgt').innerHTML=(pr?'':'<option value="all">All lights</option>')+S.groups.filter(g=>!pr||(g.presets||[]).length).map(g=>`<option value="${g.id}">${esc(g.name)}${g.hidden?' (hidden)':''}</option>`).join('');
-  if(sel)$('#sTgt').value=sel;fillPresets(pre)}
 const isFx=a=>['breathe','pulse','flicker','strobe'].includes(a),isSecs=a=>a==='strobe'||a==='flicker';
-function syncAct(){const a=$('#sAct').value;$('#sTimesL').hidden=!isFx(a)||isSecs(a);$('#sSecsL').hidden=!isSecs(a);$('#sSecsT').textContent=a==='flicker'?'Seconds (max 3600)':'Seconds (max 60)';
-  $('#sColL').hidden=$('#sBriL').hidden=$('#sFxNote').hidden=!isFx(a)}
-function buildAction(a){const tg=$('#sTgt').value;if(a==='preset')return{type:a,target:tg,preset:$('#sPre').value};if(!isFx(a))return{type:a,target:tg};
-  const hx=$('#sCol').value,[h,s]=rgb2hs(...[1,3,5].map(i=>parseInt(hx.substr(i,2),16))),cl=(v,lo,hi,d)=>Math.min(hi,Math.max(lo,+v||d));
-  return{type:a,target:tg,...(isSecs(a)?{seconds:a==='strobe'?cl($('#sSecs').value,1,60,5):cl($('#sSecs').value,1,3600,60)}:{times:cl($('#sTimes').value,1,1000,3)}),color:{hex:hx,h,s,b:cl($('#sBri').value,1,100,100),k:3500}}}
+const ACTS='<option value="off">Turn off</option><option value="on">Turn on</option><option value="preset">Apply a preset</option><option value="breathe">Breathe</option><option value="pulse">Pulse (flash)</option><option value="flicker">Candle flicker</option><option value="strobe">Strobe</option>';
+const stepHtml=()=>`<fieldset class="xs"><legend></legend>
+  <label class="xDelayL">Seconds after the previous step has completed<input type="number" class="xDelay" min="0" max="86400" step="1" value="5"></label>
+  <select class="xAct" aria-label="Action">${ACTS}</select>
+  <label>Lights<select class="xTgt"></select></label>
+  <label class="xPreL">Preset<select class="xPre"></select></label>
+  <label class="xTimesL">Times<input type="number" class="xTimes" min="1" max="1000" value="3"></label>
+  <label class="xSecsL"><span class="xSecsT">Seconds (max 60)</span><input type="number" class="xSecs" min="1" max="60" value="5"></label>
+  <label class="xColL">Color<input type="color" class="xCol" value="#ff0000"></label>
+  <label class="xBriL">Brightness (%)<input type="number" class="xBri" min="1" max="100" value="100"></label>
+  <small class="xNote">Lights do this in the color above, then go back to what they were doing. Lights that are off are skipped.</small>
+  <label class="xFadeL">Fade (seconds, blank = default from Settings)<input type="number" class="xFade" min="0" max="7200" step="0.1" placeholder="default"></label>
+  <div class="row xDelRow" style="justify-content:flex-end"><button class="xDel">Delete step</button></div></fieldset>`;
+function fillPresets(b,pre){const g=S.groups.find(x=>x.id===b.querySelector('.xTgt').value),sel=b.querySelector('.xPre');
+  sel.innerHTML=((g&&g.presets)||[]).map(p=>`<option value="${p.id}">${esc(p.name)}${p.hidden?' (hidden)':''}</option>`).join('');if(pre)sel.value=pre;b.querySelector('.xPreL').hidden=b.querySelector('.xAct').value!=='preset'}
+function fillTargets(b,sel,pre){const pr=b.querySelector('.xAct').value==='preset',t=b.querySelector('.xTgt');
+  t.innerHTML=(pr?'':'<option value="all">All lights</option>')+S.groups.filter(g=>!pr||(g.presets||[]).length).map(g=>`<option value="${g.id}">${esc(g.name)}${g.hidden?' (hidden)':''}</option>`).join('');
+  if(sel)t.value=sel;fillPresets(b,pre)}
+function syncAct(b){const a=b.querySelector('.xAct').value;b.querySelector('.xTimesL').hidden=!isFx(a)||isSecs(a);b.querySelector('.xSecsL').hidden=!isSecs(a);b.querySelector('.xSecsT').textContent=a==='flicker'?'Seconds (max 3600)':'Seconds (max 60)';
+  b.querySelector('.xColL').hidden=b.querySelector('.xBriL').hidden=b.querySelector('.xNote').hidden=!isFx(a);b.querySelector('.xFadeL').hidden=isFx(a)}
+function buildAction(b){const q=s=>b.querySelector(s),a=q('.xAct').value,tg=q('.xTgt').value,fv=q('.xFade').value;let o;
+  if(a==='preset')o={type:a,target:tg,preset:q('.xPre').value};else if(!isFx(a))o={type:a,target:tg};
+  else{const hx=q('.xCol').value,[h,s]=rgb2hs(...[1,3,5].map(i=>parseInt(hx.substr(i,2),16))),cl=(v,lo,hi,d)=>Math.min(hi,Math.max(lo,+v||d));
+    o={type:a,target:tg,...(isSecs(a)?{seconds:a==='strobe'?cl(q('.xSecs').value,1,60,5):cl(q('.xSecs').value,1,3600,60)}:{times:cl(q('.xTimes').value,1,1000,3)}),color:{hex:hx,h,s,b:cl(q('.xBri').value,1,100,100),k:3500}}}
+  if(!isFx(a)&&fv!==''&&+fv>=0)o.fade=Math.min(7200,+fv);return o}
+const readStep=b=>({delay:Math.min(86400,Math.max(0,+b.querySelector('.xDelay').value||0)),action:buildAction(b)});
+function setStep(b,a,delay){const q=s=>b.querySelector(s);q('.xAct').value=a.type;fillTargets(b,a.target,a.preset);q('.xTimes').value=a.times||3;q('.xSecs').value=a.seconds||(a.type==='flicker'?60:5);
+  q('.xCol').value=(a.color||{}).hex||'#ff0000';q('.xBri').value=(a.color||{}).b??100;q('.xFade').value=a.fade??'';if(delay!=null)q('.xDelay').value=delay;syncAct(b)}
+function renumber(){[...$('#sSteps').children].forEach((b,i)=>{b.querySelector('legend').textContent=i?`Step ${i+1}`:'Do this';b.querySelector('.xDelayL').hidden=!i;b.querySelector('.xDelRow').hidden=!i;
+  if(i)b.querySelector('.xDelayL').firstChild.textContent=`Seconds after step ${i} has completed`})}
+function addStep(a,delay){const d=document.createElement('div');d.innerHTML=stepHtml();const b=d.firstElementChild;$('#sSteps').appendChild(b);setStep(b,a,delay);renumber();b.dataset.orig=JSON.stringify(readStep(b));return b}
+$('#sSteps').addEventListener('change',e=>{const b=e.target.closest('.xs');if(!b)return;
+  if(e.target.matches('.xAct')){fillTargets(b);syncAct(b);if(e.target.value==='flicker'&&b.querySelector('.xCol').value==='#ff0000')b.querySelector('.xCol').value='#ff9329'}
+  if(e.target.matches('.xTgt'))fillPresets(b)});
+$('#sSteps').addEventListener('click',e=>{if(!e.target.matches('.xDel'))return;const b=e.target.closest('.xs'),n=[...$('#sSteps').children].indexOf(b)+1;
+  const del=()=>{b.remove();renumber()};
+  if(JSON.stringify(readStep(b))===b.dataset.orig)return del();
+  askConfirm(`Delete step ${n}? This can\u2019t be undone.`,'Yes, delete',del)});
+$('#sAddStep').onclick=()=>{const b=addStep({type:'off',target:'all'},5);b.scrollIntoView({block:'nearest'})};
 let strobeOK=false;
 function syncSched(){const t=$('#sType').value;$('#sTimeL').hidden=t!=='time';$('#sOffL').hidden=t==='time';
   $('#sLoc').textContent=t!=='time'&&S.settings.lat==null?'Set your latitude/longitude in Settings first so sunrise and sunset can be calculated.':''}
-function openSched(s){editS=s?JSON.parse(JSON.stringify(s)):{id:'s'+Date.now().toString(36),enabled:true,name:'',when:{type:'time',time:'02:00',offset:0},days:[0,1,2,3,4,5,6],action:{type:'off',target:'all'}};
-  const w=editS.when,a=editS.action;$('#sName').value=editS.name;$('#sType').value=w.type;$('#sTime').value=w.time||'02:00';$('#sOff').value=w.offset||0;
+function syncRun(){if(!$('#sdlg').open||!editS)return;const s=S.schedules.find(x=>x.id===editS.id),r=!!(s&&s.running);$('#sRun').hidden=!s||r;$('#sStop').hidden=!r}
+function openSched(s){editS=s?JSON.parse(JSON.stringify(s)):{id:'s'+Date.now().toString(36),enabled:true,name:'',when:{type:'time',time:'06:00',offset:0},days:[0,1,2,3,4,5,6],action:{type:'off',target:'all'},steps:[]};
+  const w=editS.when;$('#sName').value=editS.name;$('#sType').value=w.type;$('#sTime').value=w.time||'06:00';$('#sOff').value=w.offset||0;
   document.querySelectorAll('#sDays input').forEach(c=>c.checked=(editS.days||[]).includes(+c.value));
-  $('#sAct').value=a.type;fillTargets(a.target,a.preset);$('#sTimes').value=a.times||3;$('#sSecs').value=a.seconds||(a.type==='flicker'?60:5);$('#sCol').value=(a.color||{}).hex||'#ff0000';$('#sBri').value=(a.color||{}).b??100;syncAct();syncSched();smsg('');$('#sDel').hidden=$('#sRun').hidden=!s;$('#sdlg').showModal()}
+  $('#sSteps').innerHTML='';addStep(editS.action);(editS.steps||[]).forEach(x=>addStep(x.action||{type:'off',target:'all'},x.delay));
+  syncSched();smsg('');$('#sDel').hidden=!s;$('#sdlg').showModal();syncRun()}
 // Collapsible Groups / Lights sections + drag-to-reorder edit mode
 const SEC={groups:['#grpToggle','#grpEdit','Groups'],lights:['#litToggle','#litEdit','Lights'],schedules:['#schedToggle','#schedEdit','Schedules']};
 try{for(const k in sec)if(k!=='schedules')sec[k].open=localStorage.getItem('open_'+k)!=='0';localStorage.removeItem('open_schedules');localStorage.removeItem('schedOpen')}catch{} // Schedules always starts hidden; its open state is never remembered
-function paintSec(k){const s=sec[k],[tg,ed,nm]=SEC[k];$('#'+k).hidden=!s.open;if(k==='schedules')$('#newSched').style.visibility=s.open?'visible':'hidden';$(ed).style.visibility=s.open?'visible':'hidden';$(ed).textContent=s.edit?'Done':'Edit';
+function paintSec(k){const s=sec[k],[tg,ed,nm]=SEC[k];$('#'+k).hidden=!s.open;if(k==='schedules'){$('#newSched').style.display=$(ed).style.display=s.open?'':'none'}$(ed).style.visibility=s.open?'visible':'hidden';$(ed).textContent=s.edit?'Done':'Edit';
   $(tg).setAttribute('aria-expanded',s.open);$(tg).textContent=(s.open?'▾ ':'▸ ')+nm}
 for(const k in SEC){$(SEC[k][0]).onclick=()=>{const s=sec[k];s.open=!s.open;if(!s.open)s.edit=false;if(k!=='schedules')try{localStorage.setItem('open_'+k,s.open?'1':'0')}catch{}paintSec(k);render(true)};
   $(SEC[k][1]).onclick=()=>{sec[k].edit=!sec[k].edit;paintSec(k);render(true)};paintSec(k)}
 function saveOrder(key,ids){lastEdit=Date.now();
-  if(key==='groups'){const hid=S.groups.filter(g=>g.hidden);S.groups=[...ids.map(id=>S.groups.find(g=>g.id===id)).filter(Boolean),...hid];saveGroups()}
+  if(key==='groups'){const set=new Set(ids);let k=0;S.groups=S.groups.map(g=>set.has(g.id)?S.groups.find(x=>x.id===ids[k++])||g:g);saveGroups()}
   else if(key==='schedules'){S.schedules=ids.map(id=>S.schedules.find(x=>x.id===id)).filter(Boolean);saveSchedules()}
   else{S.settings.light_order=ids;lastGroupSave=Date.now();api('settings','PUT',{light_order:ids})}
   render(true)}
@@ -425,21 +476,23 @@ document.addEventListener('pointerup',endCardDrag);document.addEventListener('po
 $('#newSched').onclick=()=>openSched();
 $('#schedules').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;const card=b.closest('.card'),id=card&&card.dataset.sid;
   if(b.dataset.s==='edit')openSched(S.schedules.find(x=>x.id===id));
+  if(b.dataset.s==='stop'){const s=S.schedules.find(x=>x.id===id);api('schedule/'+id+'/stop');if(s)s.running=null;render(true);setTimeout(refresh,300)}
   if(b.dataset.s==='cx'){cstate.set('s:'+id,!isOpen('s:'+id));render(true)}});
 $('#schedules').addEventListener('change',e=>{if(e.target.dataset.s!=='en')return;const s=S.schedules.find(x=>x.id===e.target.closest('.card').dataset.sid);s.enabled=e.target.checked;saveSchedules();render(true)});
-$('#sType').onchange=syncSched;$('#sAct').onchange=()=>{fillTargets();syncAct();if($('#sAct').value==='flicker'&&$('#sCol').value==='#ff0000')$('#sCol').value='#ff9329'};$('#sTgt').onchange=()=>fillPresets();
+$('#sType').onchange=syncSched;
 $('#sCancel').onclick=()=>$('#sdlg').close();
-$('#sSave').onclick=()=>{const t=$('#sType').value,a=$('#sAct').value,days=[...document.querySelectorAll('#sDays input:checked')].map(c=>+c.value);
-  if(a==='strobe'&&!strobeOK)return askConfirm(STROBE_WARN,'Yes, save strobe schedule',()=>{strobeOK=true;$('#sSave').click();strobeOK=false});
-  if(a==='preset'&&!$('#sPre').value)return smsg('Choose a group that has a saved preset.');
+$('#sSave').onclick=()=>{const t=$('#sType').value,days=[...document.querySelectorAll('#sDays input:checked')].map(c=>+c.value),bl=[...$('#sSteps').children];
+  if(bl.some(b=>b.querySelector('.xAct').value==='strobe')&&!strobeOK)return askConfirm(STROBE_WARN,'Yes, save strobe schedule',()=>{strobeOK=true;$('#sSave').click();strobeOK=false});
+  for(const b of bl)if(b.querySelector('.xAct').value==='preset'&&!b.querySelector('.xPre').value)return smsg('Choose a group that has a saved preset.');
   if(!days.length)return smsg('Pick at least one day.');if(t==='time'&&!$('#sTime').value)return smsg('Enter a time.');
+  const st=bl.map(readStep);
   Object.assign(editS,{name:$('#sName').value.trim()||'Schedule',when:{type:t,time:$('#sTime').value,offset:+$('#sOff').value||0},days,
-    action:buildAction(a)});
+    action:st[0].action,steps:st.slice(1)});
   const i=S.schedules.findIndex(x=>x.id===editS.id);i<0?S.schedules.push(editS):S.schedules[i]=editS;saveSchedules();$('#sdlg').close();render(true)};
 $('#sDel').onclick=()=>{const id=editS.id,nm=editS.name||'this schedule';
   askConfirm(`Delete the schedule \u201c${nm}\u201d? This can\u2019t be undone.`,'Yes, delete',()=>{S.schedules=S.schedules.filter(x=>x.id!==id);saveSchedules();$('#sdlg').close();render(true)},true)};
-$('#sRun').onclick=async()=>{const r=await api('schedule/'+editS.id+'/run');smsg(r.ok?'Ran it now.':'Save the schedule first.');
-  if(r.ok){const s=S.schedules.find(x=>x.id===editS.id);if(s){s.manual_runs=(s.manual_runs||0)+1;lastGroupSave=Date.now();render(true)}}};
+$('#sRun').onclick=async()=>{const r=await api('schedule/'+editS.id+'/run');smsg(r.ok?'Started.':r.error==='already running'?'Already running.':'Save the schedule first.');setTimeout(refresh,300)};
+$('#sStop').onclick=async()=>{await api('schedule/'+editS.id+'/stop');smsg('Stopped.');const s=S.schedules.find(x=>x.id===editS.id);if(s)s.running=null;syncRun();setTimeout(refresh,300)};
 
 // Theme: dark by default, remembered in this browser
 const mq=matchMedia('(prefers-color-scheme: dark)');
@@ -455,22 +508,38 @@ mq.addEventListener('change',applyTheme);applyTheme();
 $('#showIps').checked=!document.documentElement.classList.contains('noip');
 $('#showIps').onchange=e=>{document.documentElement.classList.toggle('noip',!e.target.checked);try{localStorage.setItem('showIps',e.target.checked?'1':'0')}catch{}};
 
+$('#use24').checked=use24();
+$('#use24').onchange=e=>{try{localStorage.setItem('use24h',e.target.checked?'1':'0')}catch{}tickClock();render(true)};
+
 // Settings
 const dlg=$('#dlg'),saveGroups=()=>{lastGroupSave=Date.now();return api('groups','PUT',{groups:S.groups})};
-function drawG(){$('#gedit').innerHTML=S.groups.map((g,i)=>`<div style="margin-bottom:12px" data-i="${i}">
-  <div class="row"><input type="text" data-f="name" value="${esc(g.name)}" style="flex:1" aria-label="Group name"><button data-f="del">Delete</button></div>
+let gsOpen=false,gOpenSet=null;
+function drawG(){$('#gBody').hidden=!gsOpen;$('#gToggle').textContent=(gsOpen?'\u25be ':'\u25b8 ')+'Groups';$('#gToggle').setAttribute('aria-expanded',gsOpen);
+  $('#gedit').innerHTML=S.groups.map((g,i)=>{const o=gOpenSet===g.id;return`<div class="grow" data-i="${i}" data-gid="${g.id}">
+  <div class="grh"><span class="cgrip" role="button" tabindex="0" title="Drag to reorder" aria-label="Reorder ${esc(g.name)} (up and down arrow keys)"></span><button class="gname" data-f="tog" aria-expanded="${o}">${o?'\u25be':'\u25b8'} ${esc(g.name||'(unnamed)')}</button>${g.hidden?'<small>hidden</small>':''}</div>
+  ${o?`<div class="ged"><div class="row"><input type="text" data-f="name" value="${esc(g.name)}" style="flex:1" aria-label="Group name"><button data-f="del">Delete</button></div>
   <label class="hidt"><span class="sw sm"><input type="checkbox" data-f="hid" ${g.hidden?'checked':''}><i></i></span>Hidden group <small>(no card on the page; still works in schedules)</small></label>
-  <div class="mem">${S.lights.map(l=>`<label><input type="checkbox" data-f="m" value="${l.mac}" ${g.members.includes(l.mac)?'checked':''}>${esc(l.label)}</label>`).join('')||'<small>No lights found yet.</small>'}</div></div>`).join('')||'<small>No groups yet.</small>'}
-$('#openSet').onclick=()=>{const s=S.settings;$('#bc').value=s.broadcast;$('#ips').value=(s.ips||[]).join(', ');$('#scan').value=(s.scan||[]).join(', ');$('#msg').textContent='';$('#ver').textContent=S.version?'Version '+S.version:'';$('#lat').value=s.lat??'';$('#lon').value=s.lon??'';$('#poll').value=s.poll;$('#diag').textContent=S.diag?`This server is ${S.diag.local_ip||'unknown'} · replies from lights so far: ${S.diag.replies}`:'';$('#tr').value=s.transition;drawG();dlg.showModal()};
+  <div class="mem">${S.lights.map(l=>`<label><input type="checkbox" data-f="m" value="${l.mac}" ${g.members.includes(l.mac)?'checked':''}>${esc(l.label)}</label>`).join('')||'<small>No lights found yet.</small>'}</div></div>`:''}</div>`}).join('')||'<small>No groups yet.</small>'}
+$('#gToggle').onclick=e=>{e.preventDefault();gsOpen=!gsOpen;drawG()};
+let gd=null;
+$('#gedit').addEventListener('pointerdown',e=>{const gr=e.target.closest('.cgrip');if(!gr||e.button>0)return;e.preventDefault();const row=gr.closest('.grow');gd={row};row.classList.add('gdrag');document.body.style.userSelect='none'});
+document.addEventListener('pointermove',e=>{if(!gd)return;const box=$('#gedit'),next=[...box.children].filter(x=>x!==gd.row).find(x=>{const r=x.getBoundingClientRect();return e.clientY<r.top+r.height/2});next?box.insertBefore(gd.row,next):box.appendChild(gd.row)});
+function endGd(){if(!gd)return;const row=gd.row;gd=null;row.classList.remove('gdrag');document.body.style.userSelect='';
+  const ids=[...$('#gedit').children].map(x=>x.dataset.gid);S.groups=ids.map(id=>S.groups.find(g=>g.id===id));saveGroups();lastEdit=Date.now();drawG()}
+document.addEventListener('pointerup',endGd);document.addEventListener('pointercancel',endGd);
+$('#gedit').addEventListener('keydown',e=>{const gr=e.target.closest&&e.target.closest('.cgrip');if(!gr||!['ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();
+  const i=+gr.closest('.grow').dataset.i,j=i+(e.key==='ArrowUp'?-1:1);if(j<0||j>=S.groups.length)return;const id=S.groups[i].id;
+  [S.groups[i],S.groups[j]]=[S.groups[j],S.groups[i]];saveGroups();lastEdit=Date.now();drawG();$(`#gedit [data-gid="${id}"] .cgrip`)?.focus()});
+$('#openSet').onclick=()=>{gsOpen=false;gOpenSet=null;const s=S.settings;$('#bc').value=s.broadcast;$('#ips').value=(s.ips||[]).join(', ');$('#scan').value=(s.scan||[]).join(', ');$('#msg').textContent='';$('#ver').textContent=S.version?'Version '+S.version:'';$('#lat').value=s.lat??'';$('#lon').value=s.lon??'';$('#poll').value=s.poll;$('#diag').textContent=S.diag?`This server is ${S.diag.local_ip||'unknown'} · replies from lights so far: ${S.diag.replies}`:'';$('#tr').value=s.transition;drawG();dlg.showModal()};
 $('#close').onclick=()=>{dlg.close();render(true)};
-$('#addG').onclick=()=>{const n=$('#newG').value.trim();if(!n)return;S.groups.push({id:'g'+Date.now().toString(36),name:n,members:[]});$('#newG').value='';saveGroups();drawG()};
+$('#addG').onclick=()=>{const n=$('#newG').value.trim();if(!n)return;const id='g'+Date.now().toString(36);S.groups.push({id,name:n,members:[]});gOpenSet=id;$('#newG').value='';saveGroups();drawG()};
 $('#gedit').addEventListener('input',e=>{const f=e.target.dataset.f,g=S.groups[e.target.closest('[data-i]').dataset.i];
   if(f==='name')g.name=e.target.value;if(f==='hid'){g.hidden=e.target.checked;lastEdit=Date.now()}if(f==='m')g.members=e.target.checked?[...new Set([...g.members,e.target.value])]:g.members.filter(m=>m!==e.target.value);saveGroups()});
 function deleteGroup(gid){const i=S.groups.findIndex(x=>x.id===gid);if(i<0)return;
   S.groups.splice(i,1);saveGroups();
   if(S.schedules.some(s=>(s.action||{}).target===gid)){S.schedules=S.schedules.filter(s=>(s.action||{}).target!==gid);saveSchedules()}
-  openP.delete(gid);openF.delete(gid);drawG()}
-$('#gedit').addEventListener('click',e=>{if(e.target.dataset.f!=='del')return;
+  openP.delete(gid);openF.delete(gid);if(gOpenSet===gid)gOpenSet=null;drawG()}
+$('#gedit').addEventListener('click',e=>{const f=e.target.dataset.f;if(f==='tog'){const id=e.target.closest('[data-gid]').dataset.gid;gOpenSet=gOpenSet===id?null:id;drawG();return}if(f!=='del')return;
   const g=S.groups[e.target.closest('[data-i]').dataset.i],gid=g.id,name=g.name||'this group';
   const np=(g.presets||[]).length,ns=S.schedules.filter(s=>(s.action||{}).target===gid).length;
   const final=()=>askConfirm(`Delete the group “${name}”? This can’t be undone.`,'Yes, delete',()=>deleteGroup(gid));

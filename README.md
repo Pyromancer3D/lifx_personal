@@ -8,7 +8,7 @@ A small local web service that discovers and controls LIFX lights **directly ove
 
 ## Version
 
-Current build: **1.1.1** (see `VERSION` at the top of `hl_lifx_control.py`). The version is printed when the service starts, returned as `version` by `GET /api/state`, and shown at the bottom of the Settings menu. Every release ships with a `CHANGELOG.md` listing what changed and which files were updated. Releases use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes.
+Current build: **2.0.0** (see `VERSION` at the top of `hl_lifx_control.py`). The version is printed when the service starts, returned as `version` by `GET /api/state`, and shown at the bottom of the Settings menu. Every release ships with a `CHANGELOG.md` listing what changed and which files were updated. Releases use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes.
 
 ## Files
 
@@ -18,10 +18,14 @@ Current build: **1.1.1** (see `VERSION` at the top of `hl_lifx_control.py`). The
 | `index.html` | The web UI (served at `/`); calls the API below |
 | `CHANGELOG.md` | What changed in each release, and which files were updated |
 | `LICENSE` | MIT license |
-| `.gitignore` | Keeps `config.json` (your location, IPs, groups, schedules) out of git |
-| `config.json` | Created on first save: settings, groups and presets. Safe to back up or edit while the service is stopped |
+| `.gitignore` | Keeps the `.config/` folder (your location, IPs, groups, schedules) out of git |
+| `.config/config.json` | Created on first save: location, network options and the default fade |
+| `.config/devices.json` | Light order, groups and presets |
+| `.config/routines.json` | Schedules and routines |
 
-An older `data.json` is renamed to `config.json` automatically on startup if `config.json` doesn't exist yet.
+The three files live in a `.config/` folder next to the script, are safe to back up or edit while the service is stopped, and are written atomically. A file that can't be parsed is moved aside as `<name>.corrupt-<timestamp>` and that part starts empty rather than the service refusing to start.
+
+**Upgrading from 1.x:** on first start the old single `config.json` is split into the three files and renamed `config.json.migrated-v1` (an even older `data.json` is picked up the same way). Nothing needs to be done by hand.
 
 ## Running
 
@@ -112,48 +116,19 @@ Behaviour worth knowing:
 - **Optimistic state.** After sending, the local copy is updated immediately so the UI doesn't flicker; the next poll confirms the real values.
 - Commands are fire-and-forget UDP. There is no retry; if a packet is lost, repeat the call.
 
-## config.json
+## Configuration files (`.config/`)
 
-Written by the API (`PUT /api/groups`, `PUT /api/settings`):
+### `config.json`: settings (`PUT /api/settings`)
 
 ```json
 {
-  "settings": {
-    "broadcast": "192.168.1.255",
-    "ips": ["192.168.1.50"],
-    "scan": ["192.168.1.0/24"],
-    "poll": 3.0,
-    "transition": 0.5,
-    "light_order": ["d073d5003344", "d073d5001122"],
-    "lat": 40.71,
-    "lon": -74.01
-  },
-  "groups": [
-    {
-      "id": "g1a2b3",
-      "name": "Living room",
-      "members": ["d073d5001122", "d073d5003344"],
-      "presets": [
-        {
-          "id": "p9z8y7",
-          "name": "Movie night",
-          "lights": {
-            "d073d5001122": { "label": "Lamp", "on": true, "h": 30, "s": 80, "b": 25, "k": 3500 }
-          }
-        }
-      ]
-    }
-  ],
-  "schedules": [
-    { "id": "s1", "name": "Sunset indigo", "enabled": true,
-      "when": { "type": "sunset", "offset": 0 },
-      "days": [0, 1, 2, 3, 4, 5, 6],
-      "action": { "type": "preset", "target": "g1a2b3", "preset": "p9z8y7" } },
-    { "id": "s2", "name": "Lights out", "enabled": true,
-      "when": { "type": "time", "time": "02:00" },
-      "days": [0, 1, 2, 3, 4, 5, 6],
-      "action": { "type": "off", "target": "all" } }
-  ]
+  "broadcast": "192.168.1.255",
+  "ips": ["192.168.1.50"],
+  "scan": ["192.168.1.0/24"],
+  "poll": 3.0,
+  "transition": 0.5,
+  "lat": 40.71,
+  "lon": -74.01
 }
 ```
 
@@ -163,11 +138,55 @@ Written by the API (`PUT /api/groups`, `PUT /api/settings`):
 | `ips` | Extra light IPs to probe each cycle | `[]` |
 | `scan` | CIDR ranges probed address-by-address (max 1,024 addresses each) | `[]` (auto /24) |
 | `poll` | Seconds between poll cycles (minimum 1) | `3` |
-| `transition` | Fade time in seconds for every change (minimum 0) | `0.5` |
-| `light_order` | MACs in the order the page shows lights (set by dragging in the Lights section's Edit mode; unlisted lights go last, alphabetically) | `[]` |
+| `transition` | **Default fade** in seconds for every change, and for schedule steps that don't set their own fade (minimum 0) | `0.5` |
 | `lat`, `lon` | Your latitude/longitude in decimal degrees, needed only for sunrise/sunset schedules | `null` |
 
-Groups are lists of light MACs. A group with `"hidden": true` gets no card on the page but still works in schedules and the API (handy for a "notification lights" group spanning the house). **Presets** live inside their group and snapshot only that group's lights. The server stores them as-is; applying a preset is done by the web page, which sends one light call per entry (see below).
+### `devices.json`: light order, groups and presets (`PUT /api/groups`, light order via `PUT /api/settings`)
+
+```json
+{
+  "light_order": ["d073d5003344", "d073d5001122"],
+  "groups": [
+    {
+      "id": "g1a2b3",
+      "name": "Living room",
+      "members": ["d073d5001122", "d073d5003344"],
+      "presets": [
+        {
+          "id": "p9z8y7",
+          "name": "Movie night",
+          "hidden": false,
+          "lights": {
+            "d073d5001122": { "label": "Lamp", "on": true, "h": 30, "s": 80, "b": 25, "k": 3500 }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+`light_order` is the order of lights on the page (set by dragging in the Lights section's Edit mode; unlisted lights go last, alphabetically). The order of `groups` is the order on the page and in Settings.
+
+Groups are lists of light MACs. A group with `"hidden": true` gets no card on the page but still works in schedules and the API (handy for a "notification lights" group spanning the house). **Presets** live inside their group and snapshot only that group's lights. A preset with `"hidden": true` can't be activated from the page unless you reveal hidden presets with the eye button on the group's Presets panel, but schedules and routines can still use it (it is marked "(hidden)" in the schedule editor). The server stores groups and presets as-is; applying a preset from the page sends one light call per entry (see below).
+
+### `routines.json`: schedules and routines (`PUT /api/schedules`)
+
+```json
+{
+  "schedules": [
+    { "id": "s1", "name": "Sunset indigo", "enabled": true,
+      "when": { "type": "sunset", "offset": 0 },
+      "days": [0, 1, 2, 3, 4, 5, 6],
+      "action": { "type": "preset", "target": "g1a2b3", "preset": "p9z8y7", "fade": 30 } },
+    { "id": "s2", "name": "Wind down", "enabled": true,
+      "when": { "type": "time", "time": "22:00" },
+      "days": [0, 1, 2, 3, 4, 5, 6],
+      "action": { "type": "preset", "target": "g1a2b3", "preset": "p9z8y7", "fade": 120 },
+      "steps": [ { "delay": 120, "action": { "type": "off", "target": "all", "fade": 60 } } ] }
+  ]
+}
+```
 
 ## Effects (breathe, pulse, strobe)
 
@@ -188,9 +207,9 @@ Effects run **on the bulb itself** using LIFX's `SetWaveform` message (type 103)
 - **Stopping:** `stop` sends the saved color back with `SetColor`. Changing a light by hand also ends the service's tracking of the effect.
 - **Safety:** strobing can trigger seizures in people with photosensitive epilepsy. The page asks for explicit confirmation (default "No") before starting a strobe or saving a strobe schedule.
 
-## Schedules
+## Schedules and routines
 
-Schedules live in `config.json` and are run by `schedule_loop()`, so they fire whether or not a browser is open (the service itself must be running).
+Schedules live in `.config/routines.json` and are run by `schedule_loop()`, so they fire whether or not a browser is open (the service itself must be running). A **routine** is just a schedule with more than one step: every schedule has a first step (`action`), and any number of further `steps`, each running a fixed time after the previous one *has completed*. In the page, click **+ Add step** in a schedule's edit dialog to turn it into a routine.
 
 | Field | Values |
 |---|---|
@@ -201,13 +220,16 @@ Schedules live in `config.json` and are run by `schedule_loop()`, so they fire w
 | `action.color` | `{"hex":"#ff0000","h":0,"s":100,"b":100,"k":3500}` for the effect actions (`hex` is only used by the page) |
 | `action.target` | `"all"` or a group id. `"preset"` needs a group |
 | `action.preset` | Preset id (inside the target group) when `action.type` is `"preset"` |
+| `action.fade` | Optional fade in seconds (0-7200) for on / off / preset. Left out = the default `transition` from Settings |
+| `steps` | Optional list of further steps: `{"delay": seconds, "action": {...}}` (same action fields). `delay` (0-86400) counts from the moment the previous step **completes**: its fade, or the length of its effect. A 120 s fade followed by a step with `delay` 120 therefore runs 240 s after the start. Two steps with `delay` 0 act "simultaneously". No limit on the number of steps |
 | `enabled` | `false` pauses a schedule |
 | `runs`, `manual_runs` | Counters kept by the server: times it fired on schedule, and times it was run with "Run now" (`POST /api/schedule/<id>/run`). Start at 0; ignored if sent to `PUT /api/schedules` |
 
-- **Clock:** all times use the **server's** clock and timezone. Sunrise/sunset are calculated locally from `lat`/`lon` (`sun_event()`, accurate to a few minutes, no internet needed). If the sun doesn't rise or set that day (polar regions), the schedule skips it.
+- **Clock:** all times use the **server's** clock and timezone. Sunrise/sunset are calculated locally from `lat`/`lon` (`sun_event()`, accurate to a few minutes, no internet needed). If the sun doesn't rise or set that day (polar regions), the schedule skips it. The page shows the server's current time on the Schedules bar, and next-run times in the server's timezone. Each device can switch between 24-hour and 12-hour display in Settings > Display (kept in that browser, default 24-hour; the native time picker follows the device).
 - **Firing:** `schedule_loop()` checks every 15 seconds. A schedule runs once per day, when its time has passed by less than 5 minutes. If the service was off at that time, the run is **skipped**, not made up later. Restarting inside the 5-minute window can run it again.
-- **Presets:** applying a preset sends each saved light's color, brightness and power state, only for lights still in the group. A light that is offline at that moment misses it.
-- `next` (the next run time, ISO format) is computed for `GET /api/state` and is never stored.
+- **Running routines:** each run is its own thread. While it runs, the schedule card reads "Running, step N of M" and offers **Stop**. Stop cancels the remaining steps; a fade already in progress finishes on its own, and a running effect is stopped and restored. A schedule that is already running can't be started again (409).
+- **Presets:** applying a preset sends each saved light's color, brightness and power state, only for lights still in the group. A light that is offline at that moment misses it. Lights fading in from off are set to their color first, then powered on with the fade.
+- `next` (the next run time, ISO format with UTC offset) and `running` (`{"step": N, "of": M}` or `null`) are computed for `GET /api/state` and are never stored.
 
 ## HTTP API
 
@@ -228,7 +250,9 @@ curl http://localhost:8080/api/state
       "on": true, "h": 30, "s": 80, "b": 25, "k": 3500 }
   ],
   "groups": [ ... ],
-  "version": "1.1.1",
+  "schedules": [ { "id": "s2", "next": "2026-11-25T22:00:00+00:00", "running": null, ... } ],
+  "version": "2.0.0",
+  "server_time": { "epoch": 1795503088.76, "utc_offset": 0, "hms": "06:51:28" },
   "settings": { ... },
   "diag": { "local_ip": "192.168.1.10", "replies": 42 }
 }
@@ -282,7 +306,7 @@ curl -X POST localhost:8080/api/light/d073d5001122 -H 'Content-Type: application
 
 ### `PUT /api/groups`: save groups and presets
 
-Replaces the **entire** group list (including presets) and writes `config.json`. Send the full list, usually fetched from `/api/state`, edited, then sent back. Group ids and preset ids are opaque strings you choose (the UI generates them).
+Replaces the **entire** group list (including presets) and writes `devices.json`. Send the full list, usually fetched from `/api/state`, edited, then sent back. Group ids and preset ids are opaque strings you choose (the UI generates them).
 
 ```
 curl -X PUT localhost:8080/api/groups -H 'Content-Type: application/json' -d '{
@@ -312,7 +336,7 @@ Returns `{"ok": true}`; an unknown group or light gives 404 and a bad `effect` g
 
 ### `PUT /api/schedules`: save schedules
 
-Replaces the **entire** schedule list (format above) and writes `config.json`.
+Replaces the **entire** schedule list (format above, including `steps`) and writes `routines.json`.
 
 ```
 curl -X PUT localhost:8080/api/schedules -H 'Content-Type: application/json' -d '{
@@ -326,15 +350,19 @@ curl -X PUT localhost:8080/api/schedules -H 'Content-Type: application/json' -d 
 
 ### `POST /api/schedule/<schedule-id>/run`: run a schedule now
 
-Runs its action immediately, ignoring the time and day. Returns `{"ok": true}`, or `{"ok": false}` for an unknown id.
+Starts the schedule (all its steps) immediately, ignoring the time and day. Returns `{"ok": true}`; an unknown id gives 404, and a schedule that is already running gives 409 `{"ok": false, "error": "already running"}`.
 
 ```
 curl -X POST localhost:8080/api/schedule/s2/run
 ```
 
+### `POST /api/schedule/<schedule-id>/stop`: stop a running schedule
+
+Cancels the remaining steps. Returns `{"ok": true}` if it was running and `{"ok": false}` if it wasn't; an unknown id gives 404.
+
 ### `PUT /api/settings`: save settings
 
-Any subset of the fields below; invalid values are ignored (an empty `lat`/`lon` clears it). Writes `config.json`.
+Any subset of the fields below; invalid values are ignored (an empty `lat`/`lon` clears it). Writes `config.json` (and `devices.json` for `light_order`).
 
 ```
 curl -X PUT localhost:8080/api/settings -H 'Content-Type: application/json' -d '{
@@ -354,7 +382,8 @@ curl -X PUT localhost:8080/api/settings -H 'Content-Type: application/json' -d '
 |---|---|
 | 200 | Success (`{"ok": true}` for control/save calls) |
 | 404 | Unknown API path (`{"error": "not found"}`) |
-| 500 | Server error or `config.json` couldn't be written: `{"ok": false, "error": "..."}`. Details are also printed in the service's terminal |
+| 409 | The schedule is already running |
+| 500 | Server error or a file in `.config/` couldn't be written: `{"ok": false, "error": "..."}`. Details are also printed in the service's terminal |
 
 `GET /` (or any non-`/api` path) returns `index.html`.
 
@@ -362,8 +391,8 @@ curl -X PUT localhost:8080/api/settings -H 'Content-Type: application/json' -d '
 
 | Function / class | What it does |
 |---|---|
-| top of file | Loads `config.json` into `db`; creates the UDP socket (broadcast enabled) |
-| `save()` | Writes `db` to `config.json` |
+| top of file | Loads `.config/*.json` into `db` (`load()`, with `_migrate_v1()` for old installs); creates the UDP socket (broadcast enabled) |
+| `save()` | Writes the changed part of `db` (`config`, `devices` or `routines`) atomically |
 | `packet()` | Builds a LIFX packet (header + payload) |
 | `tx()` | Sends a packet to an IP on port 56700 |
 | `local_ip()`, `scan_targets()` | Work out which addresses to probe directly |
@@ -375,7 +404,9 @@ curl -X PUT localhost:8080/api/settings -H 'Content-Type: application/json' -d '
 | `sun_event()`, `fire_time()`, `next_fire()` | Work out when a schedule fires, including sunrise/sunset |
 | `run_effect()`, `stop_effect()` | Send SetWaveform / restore a light's saved color |
 | `start_flicker()`, `flicker_step()`, `flicker_loop()` | Server-driven candle flicker thread |
-| `run_action()`, `schedule_loop()` | Run a schedule's action; the scheduler thread |
+| `eff_fade()`, `do_action()` | Work out an action's fade; run one action and report how long it takes to complete |
+| `start_routine()`, `stop_routine()`, `running_view()` | Run a schedule's steps in a thread; cancel it; report "step N of M" |
+| `schedule_loop()` | The scheduler thread |
 | `Handler` | HTTP routing: `route()` wraps `_route()` so errors always return JSON |
 
 ## Troubleshooting
@@ -383,7 +414,7 @@ curl -X PUT localhost:8080/api/settings -H 'Content-Type: application/json' -d '
 - **No lights found:** open Settings, then Network. Set the broadcast address to your subnet's (e.g. `192.168.1.255`; `10.69.1.255` only works on a /24), add a scan range, or add a light's IP. Check the "replies from lights" counter and that `local_ip` in `/api/state` is on the lights' network. Allow Python through the firewall for UDP.
 - **Page can't reach the server:** open it at the address the terminal prints (not as a `file://`), and make sure nothing else is using the port. The service prints a clear message if the port is taken.
 - **Changes revert or lights ignore commands:** UDP has no delivery guarantee on weak Wi-Fi. Repeat the command or lower the poll interval.
-- **Settings won't save:** the error shown names the problem, usually `config.json` being read-only. Check the folder's permissions.
+- **Settings won't save:** the error shown names the problem, usually the `.config/` folder being read-only. Check the folder's permissions.
 
 ## License
 

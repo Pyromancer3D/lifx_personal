@@ -4,6 +4,31 @@ Each release lists what changed and which files were updated. Newest first.
 
 Versions use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes. The version is set in `hl_lifx_control.py` (`VERSION`) and shown in Settings.
 
+## 2.0.0 - 2026-11-24
+
+Major release: the configuration layout changed (existing installs are migrated automatically).
+
+**Files updated:** `hl_lifx_control.py`, `index.html`, `README.md`, `CHANGELOG.md`, `.gitignore`
+
+### Added
+- **Routines:** a schedule can now have any number of extra steps. In a schedule's edit dialog, **+ Add step** adds another action that runs "N seconds after the previous step has completed" (a 120 s fade followed by a step 120 s later runs 240 s after the start). One action per step; use two steps with 0 seconds for "at the same time". Deleting an untouched step is immediate; deleting a changed one asks first (default "No"). Any existing schedule becomes a routine by adding a step.
+- **Per-schedule and per-step fade time.** Leave blank to use the default fade from Settings.
+- **Stop button for running schedules.** While a schedule runs its card reads "Running, step N of M" ("Running" for single-step schedules) and shows **Stop** in place of the next-run note; the edit dialog shows Stop instead of Run now. Stop cancels the remaining steps; a fade in progress finishes on its own. New `POST /api/schedule/<id>/stop`.
+- **Hidden presets:** a switch in a preset's edit panel hides it from the Presets list, while schedules and routines can still use it (listed as "(hidden)" in the schedule editor). An eye button, right-aligned on the "+ New preset" row, toggles showing them: ⌣ while hidden presets are concealed, 👁 while shown.
+- **Server clock** (HH:MM:SS, as seen by the service) on the Schedules title bar, visible while collapsed.
+- **"Use 24-hour time" switch** (Settings > Display, per device, default on) for the clock and all schedule times; off shows 12-hour times with AM/PM.
+- **Groups in Settings** are collapsible (collapsed by default) and can be reordered by dragging or with the arrow keys, including hidden groups. Each group is a compact row; click it to edit. The order matches the main page.
+- API: `GET /api/state` now includes `server_time`, and each schedule's `running`; `apply` accepts a `transition` (seconds).
+
+### Changed
+- **Configuration is split into three files in a `.config/` folder:** `config.json` (location, network, default fade), `devices.json` (light order, groups, presets) and `routines.json` (schedules and routines). On first start an existing 1.x `config.json` is split automatically and kept as `config.json.migrated-v1`. Files are written atomically, and an unreadable file is set aside as `.corrupt-<time>` instead of stopping the service. Add `.config/` to backups; `.gitignore` now ignores it.
+- The **Settings** button is under "All on" / "All off" at every screen width, and **All off** is red.
+- New schedules default to **06:00** instead of 02:00.
+- "Next:" run times are shown in the server's timezone (previously the viewing device's).
+
+### Fixed
+- A light that is off now fades *in* when turned on with a fade (its color is set first, then it powers on over the fade) instead of popping on.
+
 ## 1.1.1 - 2026-11-19
 
 **Files updated:** `index.html`, `hl_lifx_control.py` (version number only), `README.md` (version number only), `CHANGELOG.md`
