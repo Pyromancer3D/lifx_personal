@@ -357,7 +357,7 @@ document.addEventListener('pointermove',e=>{if(!drag)return;
   if(anchor&&drag.pre.nextElementSibling!==anchor)drag.pan.insertBefore(drag.pre,anchor)});
 function endDrag(){if(!drag)return;const{pre,pan,gid}=drag;drag=null;pre.classList.remove('drag');document.body.style.cursor=document.body.style.userSelect='';
   const g=S.groups.find(x=>x.id===gid),order=[...pan.querySelectorAll(':scope>.pre')].map(x=>x.dataset.pid);
-  const set=new Set(order);let k=0;g.presets=g.presets.map(p=>set.has(p.id)?g.presets.find(x=>x.id===order[k++]):p);saveGroups();lastEdit=Date.now();render(true)}
+  const set=new Set(order),by=new Map(g.presets.map(p=>[p.id,p])),q=order.filter(id=>by.has(id));g.presets=g.presets.map(p=>set.has(p.id)?by.get(q.shift()):p);saveGroups();lastEdit=Date.now();render(true)}
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 $('#groups').addEventListener('keydown',e=>{const gr=e.target.closest&&e.target.closest('.grip');if(!gr||!['ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();
   const pre=gr.closest('.pre'),g=S.groups.find(x=>x.id===pre.closest('.card').dataset.gid),vl=g.presets.filter(p=>pvis(g,p)),vi=vl.findIndex(x=>x.id===pre.dataset.pid),vj=vi+(e.key==='ArrowUp'?-1:1);
@@ -453,7 +453,7 @@ function paintSec(k){const s=sec[k],[tg,ed,nm]=SEC[k];$('#'+k).hidden=!s.open;if
 for(const k in SEC){$(SEC[k][0]).onclick=()=>{const s=sec[k];s.open=!s.open;if(!s.open)s.edit=false;if(k!=='schedules')try{localStorage.setItem('open_'+k,s.open?'1':'0')}catch{}paintSec(k);render(true)};
   $(SEC[k][1]).onclick=()=>{sec[k].edit=!sec[k].edit;paintSec(k);render(true)};paintSec(k)}
 function saveOrder(key,ids){lastEdit=Date.now();
-  if(key==='groups'){const set=new Set(ids);let k=0;S.groups=S.groups.map(g=>set.has(g.id)?S.groups.find(x=>x.id===ids[k++])||g:g);saveGroups()}
+  if(key==='groups'){const set=new Set(ids),by=new Map(S.groups.map(g=>[g.id,g])),q=ids.filter(id=>by.has(id));S.groups=S.groups.map(g=>set.has(g.id)?by.get(q.shift()):g);saveGroups()}
   else if(key==='schedules'){S.schedules=ids.map(id=>S.schedules.find(x=>x.id===id)).filter(Boolean);saveSchedules()}
   else{S.settings.light_order=ids;lastGroupSave=Date.now();api('settings','PUT',{light_order:ids})}
   render(true)}

@@ -4,6 +4,17 @@ Each release lists what changed and which files were updated. Newest first.
 
 Versions use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes. The version is set in `hl_lifx_control.py` (`VERSION`) and shown in Settings.
 
+## 2.0.1 - 2026-11-24
+
+**Files updated:** `index.html`, `hl_lifx_control.py` (version number only), `README.md`, `CHANGELOG.md`
+
+### Fixed
+- Dragging group cards on the main page (Edit mode) didn't change the order. Reordering in Settings still worked, and both now work and stay in sync (hidden groups keep their place).
+- Dragging presets within a group could scramble the order in the same way; fixed.
+
+### Changed
+- README: added a prerequisite note that lights must already be on your network via the LIFX app or another method; this controller does not do initial bulb setup.
+
 ## 2.0.0 - 2026-11-24
 
 Major release: the configuration layout changed (existing installs are migrated automatically).

@@ -2,13 +2,15 @@
 
 A small local web service that discovers and controls LIFX lights **directly over your LAN**, with no cloud or internet involved. It serves a web page (`index.html`) and a JSON API, and talks to the bulbs using LIFX's local UDP protocol.
 
+> **Prerequisite:** your LIFX lights must already be set up and joined to your local network (Wi-Fi), using the LIFX app or any alternative method. This controller does **not** do initial setup of bulbs or lights; it only finds and controls lights that are already on the network.
+
 - Python 3.8+, **standard library only** (nothing to `pip install`)
 - Single process: one UDP socket, four background threads, one HTTP server
 - Built-in **schedules** (fixed times, sunrise, sunset) that run on the server even when no browser is open
 
 ## Version
 
-Current build: **2.0.0** (see `VERSION` at the top of `hl_lifx_control.py`). The version is printed when the service starts, returned as `version` by `GET /api/state`, and shown at the bottom of the Settings menu. Every release ships with a `CHANGELOG.md` listing what changed and which files were updated. Releases use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes.
+Current build: **2.0.1** (see `VERSION` at the top of `hl_lifx_control.py`). The version is printed when the service starts, returned as `version` by `GET /api/state`, and shown at the bottom of the Settings menu. Every release ships with a `CHANGELOG.md` listing what changed and which files were updated. Releases use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes.
 
 ## Files
 
@@ -28,6 +30,8 @@ The three files live in a `.config/` folder next to the script, are safe to back
 **Upgrading from 1.x:** on first start the old single `config.json` is split into the three files and renamed `config.json.migrated-v1` (an even older `data.json` is picked up the same way). Nothing needs to be done by hand.
 
 ## Running
+
+First make sure your lights are already on your network (see the note at the top: this service does no initial setup).
 
 ```
 python3 hl_lifx_control.py
@@ -251,7 +255,7 @@ curl http://localhost:8080/api/state
   ],
   "groups": [ ... ],
   "schedules": [ { "id": "s2", "next": "2026-11-25T22:00:00+00:00", "running": null, ... } ],
-  "version": "2.0.0",
+  "version": "2.0.1",
   "server_time": { "epoch": 1795503088.76, "utc_offset": 0, "hms": "06:51:28" },
   "settings": { ... },
   "diag": { "local_ip": "192.168.1.10", "replies": 42 }
