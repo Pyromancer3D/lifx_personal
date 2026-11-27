@@ -10,7 +10,7 @@ A small local web service that discovers and controls LIFX lights **directly ove
 
 ## Version
 
-Current build: **2.2.1** (see `VERSION` at the top of `hl_lifx_control.py`). The version is printed when the service starts, returned as `version` by `GET /api/state`, and shown at the bottom of the Settings menu. Every release ships with a `CHANGELOG.md` listing what changed and which files were updated. Releases use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes.
+Current build: **2.2.2** (see `VERSION` at the top of `hl_lifx_control.py`). The version is printed when the service starts, returned as `version` by `GET /api/state`, and shown at the bottom of the Settings menu. Every release ships with a `CHANGELOG.md` listing what changed and which files were updated. Releases use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes.
 
 ## Files
 
@@ -255,7 +255,7 @@ curl http://localhost:8080/api/state
   ],
   "groups": [ ... ],
   "schedules": [ { "id": "s2", "next": "2026-11-25T22:00:00+00:00", "running": {"step": 1, "of": 3, "ends": 1795503300.2}, ... } ],
-  "version": "2.2.1",
+  "version": "2.2.2",
   "server_time": { "epoch": 1795503088.76, "utc_offset": 0, "hms": "06:51:28" },
   "settings": { ... },
   "diag": { "local_ip": "192.168.1.10", "replies": 42 }

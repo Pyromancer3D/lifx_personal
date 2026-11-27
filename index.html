@@ -61,6 +61,7 @@ input[type=text],input[type=number],input[type=time],select{font:inherit;backgro
 .xfoot{display:flex;align-items:stretch;justify-content:space-between;gap:10px}.xfoot .xDel{white-space:nowrap;align-self:center}
 .xrt{display:grid;font-size:.72rem;line-height:1.2;color:var(--mut);min-height:38px;align-content:center;white-space:nowrap}.xrt b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 .top .runl,.srun{display:flex;justify-content:space-between;gap:2px 10px;flex-wrap:wrap}.top .runl{grid-column:1/-1}
+.srun[hidden]{display:none}
 .rem{margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
 .hrow{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap}.hrow .hbtn{white-space:nowrap}.hrow .push{margin-left:auto}.hrow button{font-size:.9rem;padding:4px 12px}
 .hrow .hbtn{font:inherit;font-weight:700;padding:2px 4px;margin-left:-4px;border:0;background:none;border-radius:6px;cursor:pointer}
@@ -459,7 +460,7 @@ $('#sAddStep').onclick=()=>{const b=addStep({type:'off',target:'all'},5);b.scrol
 let strobeOK=false;
 function syncSched(){const t=$('#sType').value;$('#sTimeL').hidden=t!=='time';$('#sOffL').hidden=t==='time';
   $('#sLoc').textContent=t!=='time'&&S.settings.lat==null?'Set your latitude/longitude in Settings first so sunrise and sunset can be calculated.':'';if($('#sSteps').children.length)updRuntimes()}
-function syncRun(){if(!$('#sdlg').open||!editS)return;const s=S.schedules.find(x=>x.id===editS.id),r=!!(s&&s.running);$('#sRun').hidden=!s||r;$('#sStop').hidden=!r;$('#sRemRow').hidden=!r;if(r){$('#sRunTxt').textContent=runTxt(s);$('#sRem').dataset.ends=s.running.ends||'';updRem()}}
+function syncRun(){if(!$('#sdlg').open||!editS)return;const s=S.schedules.find(x=>x.id===editS.id),r=!!(s&&s.running);$('#sRun').hidden=!s||r;$('#sStop').hidden=!r;$('#sRemRow').hidden=!r;if(!r){$('#sRem').dataset.ends='';$('#sRem').textContent=''}if(r){$('#sRunTxt').textContent=runTxt(s);$('#sRem').dataset.ends=s.running.ends||'';updRem()}}
 function openSched(s){editS=s?JSON.parse(JSON.stringify(s)):{id:'s'+Date.now().toString(36),enabled:true,name:'',when:{type:'time',time:'06:00',offset:0},days:[0,1,2,3,4,5,6],action:{type:'off',target:'all'},steps:[]};
   const w=editS.when;$('#sName').value=editS.name;$('#sType').value=w.type;$('#sTime').value=w.time||'06:00';$('#sOff').value=w.offset||0;
   document.querySelectorAll('#sDays input').forEach(c=>c.checked=(editS.days||[]).includes(+c.value));

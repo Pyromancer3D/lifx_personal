@@ -4,6 +4,13 @@ Each release lists what changed and which files were updated. Newest first.
 
 Versions use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes. The version is set in `hl_lifx_control.py` (`VERSION`) and shown in Settings.
 
+## 2.2.2 - 2026-11-26
+
+**Files updated:** `index.html`, `hl_lifx_control.py` (version number only), `README.md` (version number only), `CHANGELOG.md`
+
+### Fixed
+- The "x min y sec Remaining" line at the bottom of the schedule editor stayed on screen after the routine was stopped (on a device that had the editor open when it started). It now disappears as soon as the schedule stops, like the card does.
+
 ## 2.2.1 - 2026-11-26
 
 **Files updated:** `index.html`, `hl_lifx_control.py` (version number only), `README.md` (version number only), `CHANGELOG.md`
