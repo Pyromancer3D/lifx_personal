@@ -4,7 +4,7 @@ Standard library only (Python 3.8+). See README.md."""
 import datetime as dt, ipaddress, json, math, os, random, socket, struct, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-VERSION = '2.0.1'  # bump on every release and add an entry to CHANGELOG.md
+VERSION = '2.1.0'  # bump on every release and add an entry to CHANGELOG.md
 PORT = int(os.environ.get('PORT', 8080))
 LIFX = 56700
 SRC = 0x4C494658
@@ -427,6 +427,18 @@ def eff_fade(a):
     return db['settings']['transition'] if f is None else f
 
 
+def est_secs(a):
+    """How long an action takes to complete (matches what do_action reports), without running it."""
+    kind = a.get('type')
+    if kind == 'strobe':
+        return min(float(a.get('seconds') or 30), 60)
+    if kind == 'flicker':
+        return min(float(a.get('seconds') or CONTINUOUS_SECONDS), CONTINUOUS_SECONDS)
+    if kind in WAVES:
+        return min(float(a.get('times') or 1), 1000) * WAVES[kind][1] / 1000
+    return float(eff_fade(a)) if kind in ('on', 'off', 'preset') else 0.0
+
+
 def do_action(a):
     """Run one action now. Returns (seconds until the action is complete, the lights it acts on)."""
     tgt, kind = a.get('target', 'all'), a.get('type')
@@ -465,7 +477,7 @@ def start_routine(s):
     """Start a schedule/routine in its own thread. False if it is already running."""
     sid = s['id']
     steps = [{'delay': 0, 'action': s.get('action') or {}}] + [x for x in (s.get('steps') or []) if isinstance(x, dict)]
-    r = {'step': 1, 'of': len(steps), 'stop': threading.Event(), 'macs': [], 'kind': None}
+    r = {'step': 1, 'of': len(steps), 'stop': threading.Event(), 'macs': [], 'kind': None, 'ends': None}
     with run_lock:
         if sid in running:
             return False
@@ -476,12 +488,18 @@ def start_routine(s):
 
 def _routine_thread(name, sid, steps, r):
     try:
+        # tail[i] = estimated seconds from the start of step i's delay to the end of the routine
+        tail = [0.0] * (len(steps) + 1)
+        for i in range(len(steps) - 1, -1, -1):
+            tail[i] = (clamp_secs(steps[i].get('delay'), 86400) or 0 if i else 0) + est_secs(steps[i].get('action') or {}) + tail[i + 1]
         for i, st in enumerate(steps):
+            r['ends'] = time.time() + tail[i]
             if i and r['stop'].wait(clamp_secs(st.get('delay'), 86400) or 0):
                 break
             r['step'] = i + 1
             a = st.get('action') or {}
             secs, macs = do_action(a)
+            r['ends'] = time.time() + secs + tail[i + 1]
             r['macs'], r['kind'] = macs, a.get('type')
             print(f"[schedule] '{name}' step {i + 1}/{len(steps)}: {a.get('type')} {a.get('target', 'all')}")
             if r['stop'].is_set():  # stopped while this step was starting
@@ -512,7 +530,7 @@ def stop_routine(sid):
 
 def running_view(sid):
     r = running.get(sid)
-    return {'step': r['step'], 'of': r['of']} if r else None
+    return {'step': r['step'], 'of': r['of'], 'ends': r['ends']} if r else None
 
 
 def schedule_loop():

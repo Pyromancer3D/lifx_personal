@@ -4,6 +4,15 @@ Each release lists what changed and which files were updated. Newest first.
 
 Versions use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes. The version is set in `hl_lifx_control.py` (`VERSION`) and shown in Settings.
 
+## 2.1.0 - 2026-11-26
+
+**Files updated:** `hl_lifx_control.py`, `index.html`, `README.md`, `CHANGELOG.md`
+
+### Added
+- **Runtimes in the routine editor:** each step shows **This step** (its own length) and **Cumulative** (total runtime through the end of that step), bottom-left beside "Delete step", updating as you edit. Fades left blank use the default from Settings; effects use their cycle count or seconds.
+- **Time remaining while running:** the schedule card shows "X min Y sec Remaining", right-aligned on the "Running, step N of M" line, and the edit dialog shows the same countdown at the bottom. Times under a minute read "X sec". The countdown follows the server's clock, so it stays right on a page opened mid-run.
+- API: each running schedule's `running` object in `GET /api/state` now includes `ends` (expected finish, epoch seconds).
+
 ## 2.0.1 - 2026-11-24
 
 **Files updated:** `index.html`, `hl_lifx_control.py` (version number only), `README.md`, `CHANGELOG.md`

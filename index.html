@@ -58,6 +58,10 @@ input[type=text],input[type=number],input[type=time],select{font:inherit;backgro
 .grow .ged{margin-top:6px}
 .nrow{display:flex;justify-content:space-between;align-items:center}.nrow button{padding:5px 14px}.nrow .eye{padding:5px 12px;font-size:1.05rem;line-height:1}
 .pre.ph .pnb{opacity:.6}
+.xfoot{display:flex;align-items:stretch;justify-content:space-between;gap:10px}.xfoot .xDel{white-space:nowrap;align-self:center}
+.xrt{display:grid;font-size:.72rem;line-height:1.2;color:var(--mut);min-height:38px;align-content:center;white-space:nowrap}.xrt b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.top .runl,.srun{display:flex;justify-content:space-between;gap:2px 10px;flex-wrap:wrap}.top .runl{grid-column:1/-1}
+.rem{margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
 .hrow{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap}.hrow .hbtn{white-space:nowrap}.hrow .push{margin-left:auto}.hrow button{font-size:.9rem;padding:4px 12px}
 .hrow .hbtn{font:inherit;font-weight:700;padding:2px 4px;margin-left:-4px;border:0;background:none;border-radius:6px;cursor:pointer}
 .grid[hidden]{display:none}
@@ -166,6 +170,7 @@ small{color:var(--mut)}
     <div class="mem" id="sDays"></div></fieldset>
   <div id="sSteps"></div>
   <div class="row" style="margin-bottom:12px"><button id="sAddStep">+ Add step</button></div>
+  <div class="st srun" id="sRemRow" hidden><span id="sRunTxt"></span><span class="rem" id="sRem"></span></div>
   <small id="sMsg" role="status"></small>
   <div class="row" style="justify-content:space-between"><div class="row"><button id="sDel">Delete</button><button id="sRun">Run now</button><button id="sStop" hidden>Stop</button></div>
     <div class="row"><button id="sCancel">Cancel</button><button class="p" id="sSave">Save</button></div></div>
@@ -189,9 +194,12 @@ const pad2=n=>String(n).padStart(2,'0');
 const use24=()=>{try{return localStorage.getItem('use24h')!=='0'}catch{return true}};
 const fmtT=t=>{const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');if(!m)return t||'';const h=+m[1];return use24()?`${pad2(h)}:${m[2]}`:`${h%12||12}:${m[2]} ${h<12?'AM':'PM'}`};
 let clk=null;
+const srvNow=()=>clk?clk.epoch+(Date.now()-clk.at)/1000:Date.now()/1000;
+const fmtDur=x=>{const s=Math.max(0,Math.ceil(x-1e-6));return s<60?`${s} sec`:`${Math.floor(s/60)} min ${s%60} sec`};
+function updRem(){if(!clk)return;document.querySelectorAll('.rem[data-ends]').forEach(el=>{const e=+el.dataset.ends;el.textContent=e?fmtDur(e-srvNow())+' Remaining':''})}
 function tickClock(){const el=$('#srvClk');if(!clk){el.textContent='';return}
   const d=new Date(clk.epoch*1000+(Date.now()-clk.at)+clk.off*1000),h=d.getUTCHours(),m=pad2(d.getUTCMinutes()),s=pad2(d.getUTCSeconds());
-  el.textContent=use24()?`${pad2(h)}:${m}:${s}`:`${h%12||12}:${m}:${s} ${h<12?'AM':'PM'}`}
+  el.textContent=use24()?`${pad2(h)}:${m}:${s}`:`${h%12||12}:${m}:${s} ${h<12?'AM':'PM'}`;updRem()}
 setInterval(tickClock,1000);
 const hsb2rgb=(h,s,v)=>{s/=100;v/=100;const f=n=>{const k=(n+h/60)%6;return v-v*s*Math.max(0,Math.min(k,4-k,1))};return[f(5),f(3),f(1)].map(x=>Math.round(x*255))};
 const rgb2hs=(r,g,b)=>{r/=255;g/=255;b/=255;const m=Math.max(r,g,b),d=m-Math.min(r,g,b);let h=0;if(d){h=m===r?((g-b)/d)%6:m===g?(b-r)/d+2:(r-g)/d+4;h=(h*60+360)%360}return[Math.round(h),m?Math.round(d/m*100):0]};
@@ -267,6 +275,7 @@ function render(force){
     <label class="l">Brightness</label><input type="range" min="0" max="100" value="${ms.length?Math.round(ms.reduce((s,l)=>s+l.b,0)/ms.length):0}" data-g="b">
     <div class="brow"><button data-g="pbtn" class="pbtn" aria-expanded="${openP.has(g.id)}">${openP.has(g.id)?'Hide':'Presets'}</button><button data-g="sbtn" class="pbtn" aria-expanded="${openS.has(g.id)}">${openS.has(g.id)?'Hide':'Set All'}</button><button data-g="fbtn" class="pbtn" aria-expanded="${openF.has(g.id)}">${openF.has(g.id)?'Hide':'Fun'}</button></div>${openP.has(g.id)?presetPanel(g):''}${openF.has(g.id)?funPanel(g):''}${openS.has(g.id)?setAllPanel(g):''}`:''}</div>`}).join('')
     ||(S.groups.length?'<p class="empty">All groups are hidden. Change this in Settings.</p>':'<p class="empty">No groups yet. Create one in Settings.</p>');
+  updRem()
 }
 let fails=0,alertKey='',dismissed='',emptySince=null;
 function showAlert(key,title,msg){const a=$('#alert');
@@ -392,7 +401,7 @@ const actHtml=s=>{const a=s.action||{},c=a.color||{};if(!isFx(a.type)||!/^#[0-9a
   const txt=actTxt(s),i=txt.indexOf(c.hex);if(i<0)return esc(txt);
   return esc(txt.slice(0,i))+`<span class="chip"><i style="background:${c.hex}"></i>${esc(c.hex)}</span>`+esc(txt.slice(i+c.hex.length))};
 function sCard(s){const op=isOpen('s:'+s.id);return`<article class="card ${s.enabled===false?'dead':''}" data-sid="${s.id}"><div class="top"><h3><button class="cx" data-s="cx" aria-expanded="${op}">${op?'\u25be':'\u25b8'} ${esc(s.name)}</button></h3>
-  <label class="sw"><input type="checkbox" data-s="en" ${s.enabled===false?'':'checked'} aria-label="Enable ${esc(s.name)}"><i></i></label><p class="st">${esc(runTxt(s)||whenTxt(s))}</p></div>
+  <label class="sw"><input type="checkbox" data-s="en" ${s.enabled===false?'':'checked'} aria-label="Enable ${esc(s.name)}"><i></i></label>${s.running?`<p class="st runl"><span>${esc(runTxt(s))}</span><span class="rem" data-ends="${s.running.ends||''}"></span></p>`:`<p class="st">${esc(whenTxt(s))}</p>`}</div>
   ${op?`<p style="margin:0">${actHtml(s)}${esc(moreTxt(s))}</p>${s.running?'<div><button data-s="stop">Stop</button></div>':`<p class="st" style="margin:0">${nextTxt(s)}</p>`}<div class="srow"><div><button data-s="edit">Edit</button></div><div class="cnt" style="text-align:center"><span>Manual Activations</span><b>${s.manual_runs||0}</b></div><div class="cnt" style="text-align:right"><span>Times Activated</span><b>${s.runs||0}</b></div></div>`:''}</article>`}
 const saveSchedules=()=>{lastGroupSave=Date.now();setTimeout(refresh,2700);return api('schedules','PUT',{schedules:S.schedules.map(({next,...s})=>s)})};
 let editS=null;const smsg=t=>$('#sMsg').textContent=t;
@@ -409,7 +418,7 @@ const stepHtml=()=>`<fieldset class="xs"><legend></legend>
   <label class="xBriL">Brightness (%)<input type="number" class="xBri" min="1" max="100" value="100"></label>
   <small class="xNote">Lights do this in the color above, then go back to what they were doing. Lights that are off are skipped.</small>
   <label class="xFadeL">Fade (seconds, blank = default from Settings)<input type="number" class="xFade" min="0" max="7200" step="0.1" placeholder="default"></label>
-  <div class="row xDelRow" style="justify-content:flex-end"><button class="xDel">Delete step</button></div></fieldset>`;
+  <div class="xfoot"><span class="xrt"><span>This step: <b class="xThis"></b></span><span>Cumulative: <b class="xCum"></b></span></span><button class="xDel">Delete step</button></div></fieldset>`;
 function fillPresets(b,pre){const g=S.groups.find(x=>x.id===b.querySelector('.xTgt').value),sel=b.querySelector('.xPre');
   sel.innerHTML=((g&&g.presets)||[]).map(p=>`<option value="${p.id}">${esc(p.name)}${p.hidden?' (hidden)':''}</option>`).join('');if(pre)sel.value=pre;b.querySelector('.xPreL').hidden=b.querySelector('.xAct').value!=='preset'}
 function fillTargets(b,sel,pre){const pr=b.querySelector('.xAct').value==='preset',t=b.querySelector('.xTgt');
@@ -425,21 +434,27 @@ function buildAction(b){const q=s=>b.querySelector(s),a=q('.xAct').value,tg=q('.
 const readStep=b=>({delay:Math.min(86400,Math.max(0,+b.querySelector('.xDelay').value||0)),action:buildAction(b)});
 function setStep(b,a,delay){const q=s=>b.querySelector(s);q('.xAct').value=a.type;fillTargets(b,a.target,a.preset);q('.xTimes').value=a.times||3;q('.xSecs').value=a.seconds||(a.type==='flicker'?60:5);
   q('.xCol').value=(a.color||{}).hex||'#ff0000';q('.xBri').value=(a.color||{}).b??100;q('.xFade').value=a.fade??'';if(delay!=null)q('.xDelay').value=delay;syncAct(b)}
-function renumber(){[...$('#sSteps').children].forEach((b,i)=>{b.querySelector('legend').textContent=i?`Step ${i+1}`:'Do this';b.querySelector('.xDelayL').hidden=!i;b.querySelector('.xDelRow').hidden=!i;
+function renumber(){[...$('#sSteps').children].forEach((b,i)=>{b.querySelector('legend').textContent=i?`Step ${i+1}`:'Do this';b.querySelector('.xDelayL').hidden=!i;b.querySelector('.xDel').hidden=!i;
   if(i)b.querySelector('.xDelayL').firstChild.textContent=`Seconds after step ${i} has completed`})}
-function addStep(a,delay){const d=document.createElement('div');d.innerHTML=stepHtml();const b=d.firstElementChild;$('#sSteps').appendChild(b);setStep(b,a,delay);renumber();b.dataset.orig=JSON.stringify(readStep(b));return b}
+const estSecs=a=>{const k=a.type;if(k==='strobe')return Math.min(+a.seconds||30,60);if(k==='flicker')return Math.min(+a.seconds||3600,3600);
+  if(k==='breathe')return Math.min(+a.times||1,1000)*3;if(k==='pulse')return Math.min(+a.times||1,1000);
+  return a.fade!=null?+a.fade:(+S.settings.transition||0)};
+function updRuntimes(){let cum=0;document.querySelectorAll('#sSteps .xs').forEach((b,i)=>{const r=readStep(b),own=estSecs(r.action);cum+=(i?r.delay:0)+own;
+  b.querySelector('.xThis').textContent=fmtDur(own);b.querySelector('.xCum').textContent=fmtDur(cum)})}
+function addStep(a,delay){const d=document.createElement('div');d.innerHTML=stepHtml();const b=d.firstElementChild;$('#sSteps').appendChild(b);setStep(b,a,delay);renumber();b.dataset.orig=JSON.stringify(readStep(b));updRuntimes();return b}
+$('#sSteps').addEventListener('input',updRuntimes);
 $('#sSteps').addEventListener('change',e=>{const b=e.target.closest('.xs');if(!b)return;
   if(e.target.matches('.xAct')){fillTargets(b);syncAct(b);if(e.target.value==='flicker'&&b.querySelector('.xCol').value==='#ff0000')b.querySelector('.xCol').value='#ff9329'}
-  if(e.target.matches('.xTgt'))fillPresets(b)});
+  if(e.target.matches('.xTgt'))fillPresets(b);updRuntimes()});
 $('#sSteps').addEventListener('click',e=>{if(!e.target.matches('.xDel'))return;const b=e.target.closest('.xs'),n=[...$('#sSteps').children].indexOf(b)+1;
-  const del=()=>{b.remove();renumber()};
+  const del=()=>{b.remove();renumber();updRuntimes()};
   if(JSON.stringify(readStep(b))===b.dataset.orig)return del();
   askConfirm(`Delete step ${n}? This can\u2019t be undone.`,'Yes, delete',del)});
 $('#sAddStep').onclick=()=>{const b=addStep({type:'off',target:'all'},5);b.scrollIntoView({block:'nearest'})};
 let strobeOK=false;
 function syncSched(){const t=$('#sType').value;$('#sTimeL').hidden=t!=='time';$('#sOffL').hidden=t==='time';
   $('#sLoc').textContent=t!=='time'&&S.settings.lat==null?'Set your latitude/longitude in Settings first so sunrise and sunset can be calculated.':''}
-function syncRun(){if(!$('#sdlg').open||!editS)return;const s=S.schedules.find(x=>x.id===editS.id),r=!!(s&&s.running);$('#sRun').hidden=!s||r;$('#sStop').hidden=!r}
+function syncRun(){if(!$('#sdlg').open||!editS)return;const s=S.schedules.find(x=>x.id===editS.id),r=!!(s&&s.running);$('#sRun').hidden=!s||r;$('#sStop').hidden=!r;$('#sRemRow').hidden=!r;if(r){$('#sRunTxt').textContent=runTxt(s);$('#sRem').dataset.ends=s.running.ends||'';updRem()}}
 function openSched(s){editS=s?JSON.parse(JSON.stringify(s)):{id:'s'+Date.now().toString(36),enabled:true,name:'',when:{type:'time',time:'06:00',offset:0},days:[0,1,2,3,4,5,6],action:{type:'off',target:'all'},steps:[]};
   const w=editS.when;$('#sName').value=editS.name;$('#sType').value=w.type;$('#sTime').value=w.time||'06:00';$('#sOff').value=w.offset||0;
   document.querySelectorAll('#sDays input').forEach(c=>c.checked=(editS.days||[]).includes(+c.value));

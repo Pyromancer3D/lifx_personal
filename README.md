@@ -10,7 +10,7 @@ A small local web service that discovers and controls LIFX lights **directly ove
 
 ## Version
 
-Current build: **2.0.1** (see `VERSION` at the top of `hl_lifx_control.py`). The version is printed when the service starts, returned as `version` by `GET /api/state`, and shown at the bottom of the Settings menu. Every release ships with a `CHANGELOG.md` listing what changed and which files were updated. Releases use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes.
+Current build: **2.1.0** (see `VERSION` at the top of `hl_lifx_control.py`). The version is printed when the service starts, returned as `version` by `GET /api/state`, and shown at the bottom of the Settings menu. Every release ships with a `CHANGELOG.md` listing what changed and which files were updated. Releases use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes.
 
 ## Files
 
@@ -231,9 +231,9 @@ Schedules live in `.config/routines.json` and are run by `schedule_loop()`, so t
 
 - **Clock:** all times use the **server's** clock and timezone. Sunrise/sunset are calculated locally from `lat`/`lon` (`sun_event()`, accurate to a few minutes, no internet needed). If the sun doesn't rise or set that day (polar regions), the schedule skips it. The page shows the server's current time on the Schedules bar, and next-run times in the server's timezone. Each device can switch between 24-hour and 12-hour display in Settings > Display (kept in that browser, default 24-hour; the native time picker follows the device).
 - **Firing:** `schedule_loop()` checks every 15 seconds. A schedule runs once per day, when its time has passed by less than 5 minutes. If the service was off at that time, the run is **skipped**, not made up later. Restarting inside the 5-minute window can run it again.
-- **Running routines:** each run is its own thread. While it runs, the schedule card reads "Running, step N of M" and offers **Stop**. Stop cancels the remaining steps; a fade already in progress finishes on its own, and a running effect is stopped and restored. A schedule that is already running can't be started again (409).
+- **Running routines:** each run is its own thread. While it runs, the schedule card reads "Running, step N of M" with a live "X min Y sec Remaining" countdown on the right, and offers **Stop**. In the editor, every step shows its own length and the cumulative runtime through that step. Stop cancels the remaining steps; a fade already in progress finishes on its own, and a running effect is stopped and restored. A schedule that is already running can't be started again (409).
 - **Presets:** applying a preset sends each saved light's color, brightness and power state, only for lights still in the group. A light that is offline at that moment misses it. Lights fading in from off are set to their color first, then powered on with the fade.
-- `next` (the next run time, ISO format with UTC offset) and `running` (`{"step": N, "of": M}` or `null`) are computed for `GET /api/state` and are never stored.
+- `next` (the next run time, ISO format with UTC offset) and `running` (`{"step": N, "of": M, "ends": <epoch seconds when the run is expected to finish>}` or `null`; `ends` uses the same clock as `server_time.epoch`) are computed for `GET /api/state` and are never stored.
 
 ## HTTP API
 
@@ -254,8 +254,8 @@ curl http://localhost:8080/api/state
       "on": true, "h": 30, "s": 80, "b": 25, "k": 3500 }
   ],
   "groups": [ ... ],
-  "schedules": [ { "id": "s2", "next": "2026-11-25T22:00:00+00:00", "running": null, ... } ],
-  "version": "2.0.1",
+  "schedules": [ { "id": "s2", "next": "2026-11-25T22:00:00+00:00", "running": {"step": 1, "of": 3, "ends": 1795503300.2}, ... } ],
+  "version": "2.1.0",
   "server_time": { "epoch": 1795503088.76, "utc_offset": 0, "hms": "06:51:28" },
   "settings": { ... },
   "diag": { "local_ip": "192.168.1.10", "replies": 42 }
@@ -408,7 +408,7 @@ curl -X PUT localhost:8080/api/settings -H 'Content-Type: application/json' -d '
 | `sun_event()`, `fire_time()`, `next_fire()` | Work out when a schedule fires, including sunrise/sunset |
 | `run_effect()`, `stop_effect()` | Send SetWaveform / restore a light's saved color |
 | `start_flicker()`, `flicker_step()`, `flicker_loop()` | Server-driven candle flicker thread |
-| `eff_fade()`, `do_action()` | Work out an action's fade; run one action and report how long it takes to complete |
+| `eff_fade()`, `est_secs()`, `do_action()` | Work out an action's fade; estimate an action's length; run one action and report how long it takes to complete |
 | `start_routine()`, `stop_routine()`, `running_view()` | Run a schedule's steps in a thread; cancel it; report "step N of M" |
 | `schedule_loop()` | The scheduler thread |
 | `Handler` | HTTP routing: `route()` wraps `_route()` so errors always return JSON |
