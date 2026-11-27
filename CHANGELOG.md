@@ -4,6 +4,13 @@ Each release lists what changed and which files were updated. Newest first.
 
 Versions use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes. The version is set in `hl_lifx_control.py` (`VERSION`) and shown in Settings.
 
+## 2.2.1 - 2026-11-26
+
+**Files updated:** `index.html`, `hl_lifx_control.py` (version number only), `README.md` (version number only), `CHANGELOG.md`
+
+### Changed
+- The Fade box on schedule/routine steps is now labelled just "Fade (seconds)". When left empty it shows your actual default fade from Settings as a faint placeholder (for example `0.5`), and an empty box still follows the default if you change it later.
+
 ## 2.2.0 - 2026-11-26
 
 **Files updated:** `index.html`, `hl_lifx_control.py` (version number only), `README.md`, `CHANGELOG.md`

@@ -417,7 +417,7 @@ const stepHtml=()=>`<fieldset class="xs"><legend></legend>
   <label class="xColL">Color<input type="color" class="xCol" value="#ff0000"></label>
   <label class="xBriL">Brightness (%)<input type="number" class="xBri" min="1" max="100" value="100"></label>
   <small class="xNote">Lights do this in the color above, then go back to what they were doing. Lights that are off are skipped.</small>
-  <label class="xFadeL">Fade (seconds, blank = default from Settings)<input type="number" class="xFade" min="0" max="7200" step="0.1" placeholder="default"></label>
+  <label class="xFadeL">Fade (seconds)<input type="number" class="xFade" min="0" max="7200" step="0.1"></label>
   <div class="xfoot"><span class="xrt"><span>This step: <b class="xThis"></b></span><span>Cumulative: <b class="xCum"></b></span></span><button class="xDel">Delete step</button></div></fieldset>`;
 function fillPresets(b,pre){const g=S.groups.find(x=>x.id===b.querySelector('.xTgt').value),sel=b.querySelector('.xPre');
   sel.innerHTML=((g&&g.presets)||[]).map(p=>`<option value="${p.id}">${esc(p.name)}${p.hidden?' (hidden)':''}</option>`).join('');if(pre)sel.value=pre;b.querySelector('.xPreL').hidden=b.querySelector('.xAct').value!=='preset'}
@@ -433,7 +433,7 @@ function buildAction(b){const q=s=>b.querySelector(s),a=q('.xAct').value,tg=q('.
   if(!isFx(a)&&fv!==''&&+fv>=0)o.fade=Math.min(7200,+fv);return o}
 const readStep=b=>({delay:Math.min(86400,Math.max(0,+b.querySelector('.xDelay').value||0)),action:buildAction(b)});
 function setStep(b,a,delay){const q=s=>b.querySelector(s);q('.xAct').value=a.type;fillTargets(b,a.target,a.preset);q('.xTimes').value=a.times||3;q('.xSecs').value=a.seconds||(a.type==='flicker'?60:5);
-  q('.xCol').value=(a.color||{}).hex||'#ff0000';q('.xBri').value=(a.color||{}).b??100;q('.xFade').value=a.fade??'';if(delay!=null)q('.xDelay').value=delay;syncAct(b)}
+  q('.xCol').value=(a.color||{}).hex||'#ff0000';q('.xBri').value=(a.color||{}).b??100;q('.xFade').value=a.fade??'';q('.xFade').placeholder=String(S.settings.transition??0);if(delay!=null)q('.xDelay').value=delay;syncAct(b)}
 function renumber(){[...$('#sSteps').children].forEach((b,i)=>{b.querySelector('legend').textContent=i?`Step ${i+1}`:'Do this';b.querySelector('.xDelayL').hidden=!i;b.querySelector('.xDel').hidden=!i;
   if(i)b.querySelector('.xDelayL').firstChild.textContent=`Seconds after step ${i} has completed`})}
 const estSecs=a=>{const k=a.type;if(k==='strobe')return Math.min(+a.seconds||30,60);if(k==='flicker')return Math.min(+a.seconds||3600,3600);
