@@ -169,7 +169,7 @@ small{color:var(--mut)}
     <small id="sLoc"></small>
     <div class="mem" id="sDays"></div></fieldset>
   <div id="sSteps"></div>
-  <div class="row" style="margin-bottom:12px"><button id="sAddStep">+ Add step</button></div>
+  <div class="xfoot" style="margin-bottom:12px"><button id="sAddStep" style="align-self:center">+ Add step</button><span class="xrt" style="text-align:right"><span>Total Runtime: <b id="sTot"></b></span><span>End Time: <b id="sEnd"></b></span></span></div>
   <div class="st srun" id="sRemRow" hidden><span id="sRunTxt"></span><span class="rem" id="sRem"></span></div>
   <small id="sMsg" role="status"></small>
   <div class="row" style="justify-content:space-between"><div class="row"><button id="sDel">Delete</button><button id="sRun">Run now</button><button id="sStop" hidden>Stop</button></div>
@@ -402,7 +402,7 @@ const actHtml=s=>{const a=s.action||{},c=a.color||{};if(!isFx(a.type)||!/^#[0-9a
   return esc(txt.slice(0,i))+`<span class="chip"><i style="background:${c.hex}"></i>${esc(c.hex)}</span>`+esc(txt.slice(i+c.hex.length))};
 function sCard(s){const op=isOpen('s:'+s.id);return`<article class="card ${s.enabled===false?'dead':''}" data-sid="${s.id}"><div class="top"><h3><button class="cx" data-s="cx" aria-expanded="${op}">${op?'\u25be':'\u25b8'} ${esc(s.name)}</button></h3>
   <label class="sw"><input type="checkbox" data-s="en" ${s.enabled===false?'':'checked'} aria-label="Enable ${esc(s.name)}"><i></i></label>${s.running?`<p class="st runl"><span>${esc(runTxt(s))}</span><span class="rem" data-ends="${s.running.ends||''}"></span></p>`:`<p class="st">${esc(whenTxt(s))}</p>`}</div>
-  ${op?`<p style="margin:0">${actHtml(s)}${esc(moreTxt(s))}</p>${s.running?'<div><button data-s="stop">Stop</button></div>':`<p class="st" style="margin:0">${nextTxt(s)}</p>`}<div class="srow"><div><button data-s="edit">Edit</button></div><div class="cnt" style="text-align:center"><span>Manual Activations</span><b>${s.manual_runs||0}</b></div><div class="cnt" style="text-align:right"><span>Times Activated</span><b>${s.runs||0}</b></div></div>`:''}</article>`}
+  ${op?`<p style="margin:0">${actHtml(s)}${esc(moreTxt(s))}</p>${s.running?'<div><button data-s="stop">Stop</button></div>':`<p class="st" style="margin:0">Runtime: ${fmtDur(schedTotal(s))}</p><p class="st" style="margin:0">${nextTxt(s)}</p>`}<div class="srow"><div><button data-s="edit">Edit</button></div><div class="cnt" style="text-align:center"><span>Manual Activations</span><b>${s.manual_runs||0}</b></div><div class="cnt" style="text-align:right"><span>Times Activated</span><b>${s.runs||0}</b></div></div>`:''}</article>`}
 const saveSchedules=()=>{lastGroupSave=Date.now();setTimeout(refresh,2700);return api('schedules','PUT',{schedules:S.schedules.map(({next,...s})=>s)})};
 let editS=null;const smsg=t=>$('#sMsg').textContent=t;
 const isFx=a=>['breathe','pulse','flicker','strobe'].includes(a),isSecs=a=>a==='strobe'||a==='flicker';
@@ -439,8 +439,13 @@ function renumber(){[...$('#sSteps').children].forEach((b,i)=>{b.querySelector('
 const estSecs=a=>{const k=a.type;if(k==='strobe')return Math.min(+a.seconds||30,60);if(k==='flicker')return Math.min(+a.seconds||3600,3600);
   if(k==='breathe')return Math.min(+a.times||1,1000)*3;if(k==='pulse')return Math.min(+a.times||1,1000);
   return a.fade!=null?+a.fade:(+S.settings.transition||0)};
+const schedTotal=s=>((s.steps||[]).reduce((n,x)=>n+(+x.delay||0)+estSecs(x.action||{}),0))+estSecs(s.action||{});
+function endTime(total){const w=$('#sType').value;let st=null;
+  if(w==='time'){const m=/^(\d{1,2}):(\d{2})$/.exec($('#sTime').value||'');if(m)st=+m[1]*60+ +m[2]}
+  else{const s=editS&&S.schedules.find(x=>x.id===editS.id),m=s&&s.next&&(s.when||{}).type===w&&(+(s.when||{}).offset||0)===(+$('#sOff').value||0)&&/T(\d\d):(\d\d)/.exec(s.next);if(m)st=+m[1]*60+ +m[2]}
+  if(st==null)return'--:--';const e=Math.floor(st+total/60)%1440;return fmtT(pad2(Math.floor(e/60))+':'+pad2(e%60))}
 function updRuntimes(){let cum=0;document.querySelectorAll('#sSteps .xs').forEach((b,i)=>{const r=readStep(b),own=estSecs(r.action);cum+=(i?r.delay:0)+own;
-  b.querySelector('.xThis').textContent=fmtDur(own);b.querySelector('.xCum').textContent=fmtDur(cum)})}
+  b.querySelector('.xThis').textContent=fmtDur(own);b.querySelector('.xCum').textContent=fmtDur(cum)});$('#sTot').textContent=fmtDur(cum);$('#sEnd').textContent=endTime(cum)}
 function addStep(a,delay){const d=document.createElement('div');d.innerHTML=stepHtml();const b=d.firstElementChild;$('#sSteps').appendChild(b);setStep(b,a,delay);renumber();b.dataset.orig=JSON.stringify(readStep(b));updRuntimes();return b}
 $('#sSteps').addEventListener('input',updRuntimes);
 $('#sSteps').addEventListener('change',e=>{const b=e.target.closest('.xs');if(!b)return;
@@ -453,7 +458,7 @@ $('#sSteps').addEventListener('click',e=>{if(!e.target.matches('.xDel'))return;c
 $('#sAddStep').onclick=()=>{const b=addStep({type:'off',target:'all'},5);b.scrollIntoView({block:'nearest'})};
 let strobeOK=false;
 function syncSched(){const t=$('#sType').value;$('#sTimeL').hidden=t!=='time';$('#sOffL').hidden=t==='time';
-  $('#sLoc').textContent=t!=='time'&&S.settings.lat==null?'Set your latitude/longitude in Settings first so sunrise and sunset can be calculated.':''}
+  $('#sLoc').textContent=t!=='time'&&S.settings.lat==null?'Set your latitude/longitude in Settings first so sunrise and sunset can be calculated.':'';if($('#sSteps').children.length)updRuntimes()}
 function syncRun(){if(!$('#sdlg').open||!editS)return;const s=S.schedules.find(x=>x.id===editS.id),r=!!(s&&s.running);$('#sRun').hidden=!s||r;$('#sStop').hidden=!r;$('#sRemRow').hidden=!r;if(r){$('#sRunTxt').textContent=runTxt(s);$('#sRem').dataset.ends=s.running.ends||'';updRem()}}
 function openSched(s){editS=s?JSON.parse(JSON.stringify(s)):{id:'s'+Date.now().toString(36),enabled:true,name:'',when:{type:'time',time:'06:00',offset:0},days:[0,1,2,3,4,5,6],action:{type:'off',target:'all'},steps:[]};
   const w=editS.when;$('#sName').value=editS.name;$('#sType').value=w.type;$('#sTime').value=w.time||'06:00';$('#sOff').value=w.offset||0;
@@ -494,7 +499,7 @@ $('#schedules').addEventListener('click',e=>{const b=e.target.closest('[data-s]'
   if(b.dataset.s==='stop'){const s=S.schedules.find(x=>x.id===id);api('schedule/'+id+'/stop');if(s)s.running=null;render(true);setTimeout(refresh,300)}
   if(b.dataset.s==='cx'){cstate.set('s:'+id,!isOpen('s:'+id));render(true)}});
 $('#schedules').addEventListener('change',e=>{if(e.target.dataset.s!=='en')return;const s=S.schedules.find(x=>x.id===e.target.closest('.card').dataset.sid);s.enabled=e.target.checked;saveSchedules();render(true)});
-$('#sType').onchange=syncSched;
+$('#sType').onchange=syncSched;$('#sTime').addEventListener('input',()=>updRuntimes());$('#sOff').addEventListener('input',()=>updRuntimes());
 $('#sCancel').onclick=()=>$('#sdlg').close();
 $('#sSave').onclick=()=>{const t=$('#sType').value,days=[...document.querySelectorAll('#sDays input:checked')].map(c=>+c.value),bl=[...$('#sSteps').children];
   if(bl.some(b=>b.querySelector('.xAct').value==='strobe')&&!strobeOK)return askConfirm(STROBE_WARN,'Yes, save strobe schedule',()=>{strobeOK=true;$('#sSave').click();strobeOK=false});

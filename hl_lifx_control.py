@@ -4,7 +4,7 @@ Standard library only (Python 3.8+). See README.md."""
 import datetime as dt, ipaddress, json, math, os, random, socket, struct, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-VERSION = '2.1.0'  # bump on every release and add an entry to CHANGELOG.md
+VERSION = '2.2.0'  # bump on every release and add an entry to CHANGELOG.md
 PORT = int(os.environ.get('PORT', 8080))
 LIFX = 56700
 SRC = 0x4C494658

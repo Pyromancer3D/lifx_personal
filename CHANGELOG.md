@@ -4,6 +4,14 @@ Each release lists what changed and which files were updated. Newest first.
 
 Versions use `MAJOR.MINOR.PATCH`: MAJOR for changes that break `config.json` or the API, MINOR for new features, PATCH for fixes. The version is set in `hl_lifx_control.py` (`VERSION`) and shown in Settings.
 
+## 2.2.0 - 2026-11-26
+
+**Files updated:** `index.html`, `hl_lifx_control.py` (version number only), `README.md`, `CHANGELOG.md`
+
+### Added
+- **Total Runtime and End Time** at the bottom of the schedule/routine editor, right-aligned on the "+ Add step" row, updating live. End Time is the start time plus the total runtime in your 12/24-hour format, shown plainly past midnight. For sunrise/sunset it uses the next scheduled run, and shows `--:--` when that isn't known (for example no location set, or the timing was just changed).
+- **Runtime** on the schedule card, above the "Next:" line, using the same minutes/seconds format. Hidden while the schedule runs (Stop and the countdown take its place).
+
 ## 2.1.0 - 2026-11-26
 
 **Files updated:** `hl_lifx_control.py`, `index.html`, `README.md`, `CHANGELOG.md`
